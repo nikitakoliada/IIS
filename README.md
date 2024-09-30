@@ -1,5 +1,7 @@
 # Equipment Rental Management System
 
+Authors: xkolia00, xbuten00, xvoron03
+
 ## Overview
 
 This system is designed to manage the lending of technical tools and equipment across multiple studios. Each studio owns specific equipment, and each piece of equipment has unique attributes such as the year of manufacture, purchase date, and an image. The owner of the equipment sets the maximum rental duration for each item. Information regarding where and when equipment can be picked up must also be provided.
