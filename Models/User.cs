@@ -10,6 +10,7 @@ public class User : IdentityUser
     public string Address { get; set; }
     public DateTime BirthDate { get; set; }
 
-    public ICollection<Studio> StudiosAssigned { get; set; }
+    public Studio AssignedStudio { get; set; }
+    
     public ICollection<Borrow> BorrowedEquipment { get; set; }
 }
