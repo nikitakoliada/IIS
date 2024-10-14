@@ -13,4 +13,5 @@ public class User : IdentityUser
     public Studio AssignedStudio { get; set; }
     
     public ICollection<Borrow> BorrowedEquipment { get; set; }
+    public ICollection<Equipment> RestrictedEquipment { get; set; }
 }

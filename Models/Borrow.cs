@@ -7,7 +7,7 @@ public class Borrow
     public DateTime ToDate { get; set; }
     public string State { get; set; }  // could be an enum as well
 
-    public int UserId { get; set; }
+    public string UserId { get; set; }
     public User User { get; set; } 
     public int EquipmentId { get; set; }
     public Equipment Equipment { get; set; }

@@ -55,7 +55,7 @@ public class ApplicationDbContext : IdentityDbContext
 
         modelBuilder.Entity<Equipment>()
             .HasMany(e => e.UsersForbiddenToBorrow)
-            .WithMany(u => u.AssignedStudio.OwnedEquipment);
+            .WithMany(u => u.RestrictedEquipment);
 
         modelBuilder.Entity<RentalDayInterval>()
             .HasKey(r => r.Id);
