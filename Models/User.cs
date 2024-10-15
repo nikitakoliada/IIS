@@ -4,14 +4,13 @@ namespace IIS.Models;
 
 public class User : IdentityUser
 {
-    public string Name { get; set; }
-    public string Email { get; set; }
-    public string PhoneNumber { get; set; }
-    public string Address { get; set; }
-    public DateTime BirthDate { get; set; }
-
-    public Studio AssignedStudio { get; set; }
+    public required string Name { get; set; }
+    public required string Address { get; set; }
+    public required DateTime BirthDate { get; set; }
     
-    public ICollection<Borrow> BorrowedEquipment { get; set; }
-    public ICollection<Equipment> RestrictedEquipment { get; set; }
+    public int? AssignedStudioId { get; set; }
+    public Studio? AssignedStudio { get; set; }
+
+    public ICollection<Borrow> BorrowedEquipment { get; set; } = new List<Borrow>();
+    public ICollection<Equipment> RestrictedEquipment { get; set; } = new List<Equipment>();
 }

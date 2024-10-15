@@ -1,14 +1,15 @@
+using IIS.Enums;
+
 namespace IIS.Models;
 
 public class Borrow
 {
-    public int Id { get; set; } 
-    public DateTime FromDate { get; set; }
-    public DateTime ToDate { get; set; }
-    public string State { get; set; }  // could be an enum as well
-
-    public string UserId { get; set; }
-    public User User { get; set; } 
-    public int EquipmentId { get; set; }
-    public Equipment Equipment { get; set; }
+    public required int Id { get; set; }
+    public required DateTime FromDate { get; set; }
+    public required DateTime ToDate { get; set; }
+    public required BorrowState State { get; set; }  
+    public required string UserId { get; set; }
+    public required User User { get; set; } 
+    public required int EquipmentId { get; set; }
+    public required Equipment Equipment { get; set; }
 }

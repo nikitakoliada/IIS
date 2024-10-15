@@ -68,6 +68,10 @@ public class ApplicationDbContext : IdentityDbContext
 
         modelBuilder.Entity<EquipmentType>()
             .HasKey(et => et.Id);
+        
+        modelBuilder.Entity<EquipmentType>()
+            .HasIndex(et => et.Name)
+            .IsUnique();
 
         modelBuilder.Entity<Studio>()
             .HasKey(s => s.Id);
