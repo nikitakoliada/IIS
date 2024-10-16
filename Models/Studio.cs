@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace IIS.Models;
@@ -5,7 +6,8 @@ namespace IIS.Models;
 public class Studio
 {
     public int Id { get; set; }
-    [MaxLength(200)]
+    [DisplayName("Studio Name")]
+    [StringLength(200)]
     public required string Name { get; set; }
 
     public ICollection<User> UsersAssigned { get; set; } = new List<User>();
