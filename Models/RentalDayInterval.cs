@@ -9,5 +9,5 @@ public class RentalDayInterval
     public required string Place { get; set; }
 
     public required int EquipmentId { get; set; }
-    public required Equipment Equipment { get; set; } = null!;
+    public Equipment Equipment { get; set; } = null!;
 }

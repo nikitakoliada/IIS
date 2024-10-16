@@ -10,7 +10,7 @@ public class Borrow
     public required BorrowState State { get; set; }
     
     public required string UserId { get; set; }
-    public required User User { get; set; } = null!;
+    public User User { get; set; } = null!;
     public required int EquipmentId { get; set; }
-    public required Equipment Equipment { get; set; } = null!;
+    public Equipment Equipment { get; set; } = null!;
 }
