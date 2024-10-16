@@ -28,7 +28,9 @@ builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfi
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 
+// Add repositories
 builder.Services.AddScoped<EquipmentTypeRepository>();
+builder.Services.AddScoped<StudioRepository>();
 
 var app = builder.Build();
 
