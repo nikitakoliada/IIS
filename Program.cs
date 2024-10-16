@@ -35,6 +35,9 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var services = scope.ServiceProvider;
+
+    SeedData.Initialize(services);
     await CreateRoles(roleManager);
 }
 
