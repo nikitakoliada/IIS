@@ -4,7 +4,7 @@ namespace IIS.Models;
 
 public class Borrow
 {
-    public required int Id { get; set; }
+    public int Id { get; set; }
     public required DateTime FromDate { get; set; }
     public required DateTime ToDate { get; set; }
     public required BorrowState State { get; set; }

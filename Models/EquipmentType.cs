@@ -4,7 +4,7 @@ namespace IIS.Models;
 
 public class EquipmentType
 {
-    public required int Id { get; set; }
+    public int Id { get; set; }
     [MaxLength(100)]
     public required string Name { get; set; }
 

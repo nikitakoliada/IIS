@@ -2,7 +2,7 @@ namespace IIS.Models;
 
 public class Equipment
 {
-    public required int Id { get; set; } 
+    public int Id { get; set; } 
     public required int CreationYear { get; set; }
     public required DateTime PurchaseDate { get; set; }
     public string? Image { get; set; }

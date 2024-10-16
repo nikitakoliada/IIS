@@ -4,7 +4,7 @@ namespace IIS.Models;
 
 public class Studio
 {
-    public required int Id { get; set; }
+    public int Id { get; set; }
     [MaxLength(200)]
     public required string Name { get; set; }
 
