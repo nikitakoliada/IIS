@@ -31,6 +31,7 @@ builder.Services.AddControllersWithViews();
 // Add repositories
 builder.Services.AddScoped<EquipmentTypeRepository>();
 builder.Services.AddScoped<StudioRepository>();
+builder.Services.AddScoped<EquipmentRepository>();
 
 var app = builder.Build();
 

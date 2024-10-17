@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace IIS.Models;
 
@@ -18,8 +19,10 @@ public class Equipment
     public TimeSpan? MaxRentalTime { get; set; }
 
     public required int StudioId { get; set; }
+    [ValidateNever]
     public Studio Studio { get; set; } = null!;
     public required int EquipmentTypeId { get; set; }
+    [ValidateNever]
     public EquipmentType EquipmentType { get; set; } = null!;
     
     public ICollection<Borrow> Borrows { get; set; } = new List<Borrow>();
