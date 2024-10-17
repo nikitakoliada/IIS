@@ -21,9 +21,17 @@ namespace IIS.Controllers
         }
 
         // GET: EquipmentType
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
-            return View(await _equipmentTypeRepository.GetAllAsync());
+            var equipmentTypes = await _equipmentTypeRepository.GetAllAsync();
+            
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                equipmentTypes = [..equipmentTypes.Where(e => 
+                    e.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))];
+            }
+
+            return View(equipmentTypes);
         }
 
         // GET: EquipmentType/Details/5

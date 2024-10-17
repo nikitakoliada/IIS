@@ -21,9 +21,17 @@ namespace IIS.Controllers
         }
 
         // GET: Studio
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
-            return View(await _studioRepository.GetAllAsync());
+            var studios = await _studioRepository.GetAllAsync();
+            
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                studios = [..studios.Where(s => 
+                    s.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))];
+            }
+            
+            return View(studios);
         }
 
         // GET: Studio/Details/5
