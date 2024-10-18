@@ -8,22 +8,19 @@ using Microsoft.EntityFrameworkCore;
 using IIS.Data;
 using IIS.Models;
 using IIS.Repositories;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace IIS.Controllers
 {
-    public class StudioController : Controller
+    public class StudioController(StudioRepository studioRepository, UserManager<User> userManager)
+        : Controller
     {
-        private readonly StudioRepository _studioRepository;
-
-        public StudioController(StudioRepository studioRepository)
-        {
-            _studioRepository = studioRepository;
-        }
-
         // GET: Studio
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index(string searchString)
         {
-            var studios = await _studioRepository.GetAllAsync();
+            var studios = await studioRepository.GetAllAsync();
             
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -35,23 +32,41 @@ namespace IIS.Controllers
         }
 
         // GET: Studio/Details/5
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
+            var currentUser = (await userManager.GetUserAsync(HttpContext.User))!;
+            var currentUserRoles = await userManager.GetRolesAsync(currentUser);
+            Studio studio;
+
             if (id == null)
             {
-                return NotFound();
+                if (currentUser.AssignedStudioId == null)
+                {
+                    return NotFound();
+                }
+                
+                studio = await studioRepository.GetByIdAsync(currentUser.AssignedStudioId.Value);
             }
-
-            var studio = await _studioRepository.GetByIdAsync(id.Value);
-            if (studio == null)
+            else
             {
-                return NotFound();
+                if (!currentUserRoles.Contains("Admin"))
+                {
+                    return Forbid();
+                }
+                
+                studio = await studioRepository.GetByIdAsync(id.Value);
+                if (studio == null)
+                {
+                    return NotFound();
+                }
             }
 
             return View(studio);
         }
 
         // GET: Studio/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
@@ -60,6 +75,7 @@ namespace IIS.Controllers
         // POST: Studio/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("Id,Name")] Studio studio)
         {
             if (!ModelState.IsValid)
@@ -67,12 +83,13 @@ namespace IIS.Controllers
                 return View(studio);
             }
             
-            await _studioRepository.CreateAsync(studio);
+            await studioRepository.CreateAsync(studio);
             
             return RedirectToAction(nameof(Index));
         }
 
         // GET: Studio/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -80,7 +97,7 @@ namespace IIS.Controllers
                 return NotFound();
             }
 
-            var studio = await _studioRepository.GetByIdAsync(id.Value);
+            var studio = await studioRepository.GetByIdAsync(id.Value);
             if (studio == null)
             {
                 return NotFound();
@@ -92,6 +109,7 @@ namespace IIS.Controllers
         // POST: Studio/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Studio studio)
         {
             if (id != studio.Id)
@@ -106,11 +124,11 @@ namespace IIS.Controllers
 
             try
             {
-                await _studioRepository.UpdateAsync(studio);
+                await studioRepository.UpdateAsync(studio);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (await _studioRepository.GetByIdAsync(studio.Id) == null)
+                if (await studioRepository.GetByIdAsync(studio.Id) == null)
                 {
                     return NotFound();
                 }
@@ -122,6 +140,7 @@ namespace IIS.Controllers
         }
 
         // GET: Studio/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -129,7 +148,7 @@ namespace IIS.Controllers
                 return NotFound();
             }
 
-            var studio = await _studioRepository.GetByIdAsync(id.Value);
+            var studio = await studioRepository.GetByIdAsync(id.Value);
             if (studio == null)
             {
                 return NotFound();
@@ -141,15 +160,16 @@ namespace IIS.Controllers
         // POST: Studio/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var studio = await _studioRepository.GetByIdAsync(id);
+            var studio = await studioRepository.GetByIdAsync(id);
             if (studio == null)
             {
                 return NotFound();
             }
             
-            await _studioRepository.RemoveAsync(studio);
+            await studioRepository.RemoveAsync(studio);
             
             return RedirectToAction(nameof(Index));
         }
