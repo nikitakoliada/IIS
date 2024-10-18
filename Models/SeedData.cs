@@ -1,4 +1,5 @@
 using IIS.Data;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace IIS.Models;
@@ -167,6 +168,42 @@ public static class SeedData
             }
         );
 
+        context.SaveChanges();
+
+        var admin = new User
+        {
+            Name = "Admin",
+            Email = "admin@example.com",
+            UserName = "admin@example.com",
+            NormalizedEmail = "ADMIN@EXAMPLE.COM",
+            NormalizedUserName = "ADMIN@EXAMPLE.COM",
+            Address = "123 Main St",
+            BirthDate = DateTime.Today.AddYears(-18),
+            EmailConfirmed = true,
+        };
+        admin.PasswordHash = new PasswordHasher<User>().HashPassword(admin, "qwerty678");
+        
+        context.Users.AddRange(
+            admin,
+            new User
+            {
+                Name = "John Doe",
+                Email = "johndoe@example.com",
+                UserName = "johndoe@example.com",
+                NormalizedEmail = "JOHNDOE@EXAMPLE.COM",
+                NormalizedUserName = "JOHNDOE@EXAMPLE.COM",
+                Address = "123 Main St",
+                BirthDate = DateTime.Today.AddYears(-20),
+            },
+            new User
+            {
+                Name = "Jane Doe",
+                Email = "janedoe@example.com",
+                Address = "456 Main St",
+                BirthDate = DateTime.Today.AddYears(-22)
+            }
+        );
+        
         context.SaveChanges();
     }
 }

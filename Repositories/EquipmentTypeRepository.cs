@@ -4,43 +4,36 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IIS.Repositories;
 
-public class EquipmentTypeRepository
+public class EquipmentTypeRepository(ApplicationDbContext context)
 {
-    private readonly ApplicationDbContext _context;
-    
-    public EquipmentTypeRepository(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-    
     public Task<List<EquipmentType>> GetAllAsync()
     {
-        return _context.EquipmentTypes.ToListAsync();
+        return context.EquipmentTypes.ToListAsync();
     }
     
     public Task<EquipmentType?> GetByIdAsync(int id)
     {
-        return _context.EquipmentTypes.FirstOrDefaultAsync(e => e.Id == id);
+        return context.EquipmentTypes.FirstOrDefaultAsync(e => e.Id == id);
     }
     
     public Task<int> CreateAsync(EquipmentType equipmentType)
     {
-        _context.Add(equipmentType);
+        context.Add(equipmentType);
         
-        return _context.SaveChangesAsync();
+        return context.SaveChangesAsync();
     }
     
     public Task<int> UpdateAsync(EquipmentType equipmentType)
     {
-        _context.Update(equipmentType);
+        context.Update(equipmentType);
         
-        return _context.SaveChangesAsync();
+        return context.SaveChangesAsync();
     }
     
     public Task<int> RemoveAsync(EquipmentType equipmentType)
     {
-        _context.Remove(equipmentType);
+        context.Remove(equipmentType);
         
-        return _context.SaveChangesAsync();
+        return context.SaveChangesAsync();
     }
 }

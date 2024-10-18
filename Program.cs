@@ -4,6 +4,27 @@ using IIS.Data;
 using IIS.Models;
 using IIS.Repositories;
 
+
+// sooooo basically use this if you want some controller
+// functions only be used by specific role [Authorize(Roles = "Teacher")]
+// and in services add _userManager.AddToRoleAsync(user, role) for new user 
+async Task CreateRoles(RoleManager<IdentityRole> roleManager)
+{
+    string[] roleNames = { "Admin", "StudioAdmin", "Teacher" };
+    IdentityResult roleResult;
+
+    foreach (var roleName in roleNames)
+    {
+        // Check if the role exists
+        if (!await roleManager.RoleExistsAsync(roleName))
+        {
+            // Create the roles and seed them to the database
+            await roleManager.CreateAsync(new IdentityRole(roleName));
+        }
+    }
+}
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -32,16 +53,15 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<EquipmentTypeRepository>();
 builder.Services.AddScoped<StudioRepository>();
 builder.Services.AddScoped<EquipmentRepository>();
+builder.Services.AddScoped<UserRepository>();
 
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var services = scope.ServiceProvider;
+    await CreateRoles(scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>());
 
-    SeedData.Initialize(services);
-    await CreateRoles(roleManager);
+    SeedData.Initialize(scope.ServiceProvider);
 }
 
 // Configure the HTTP request pipeline.
@@ -61,8 +81,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthorization();
 app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
@@ -70,23 +90,3 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 app.Run();
-
-// sooooo basically use this if you want some controller
-// functions only be used by specific role [Authorize(Roles = "Teacher")]
-// and in services add _userManager.AddToRoleAsync(user, role) for new user 
-async Task CreateRoles(RoleManager<IdentityRole> roleManager)
-{
-    string[] roleNames = { "Admin", "Teacher", "StudioAdmin" };
-    IdentityResult roleResult;
-
-    foreach (var roleName in roleNames)
-    {
-        // Check if the role exists
-        var roleExist = await roleManager.RoleExistsAsync(roleName);
-        if (!roleExist)
-        {
-            // Create the roles and seed them to the database
-            roleResult = await roleManager.CreateAsync(new IdentityRole(roleName));
-        }
-    }
-}

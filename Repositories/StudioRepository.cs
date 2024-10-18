@@ -4,43 +4,36 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IIS.Repositories;
 
-public class StudioRepository
+public class StudioRepository(ApplicationDbContext context)
 {
-    private readonly ApplicationDbContext _context;
-    
-    public StudioRepository(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-    
     public Task<List<Studio>> GetAllAsync()
     {
-        return _context.Studios.ToListAsync();
+        return context.Studios.ToListAsync();
     }
     
     public Task<Studio?> GetByIdAsync(int id)
     {
-        return _context.Studios.FirstOrDefaultAsync(s => s.Id == id);
+        return context.Studios.FirstOrDefaultAsync(s => s.Id == id);
     }
     
     public Task<int> CreateAsync(Studio studio)
     {
-        _context.Add(studio);
+        context.Add(studio);
         
-        return _context.SaveChangesAsync();
+        return context.SaveChangesAsync();
     }
     
     public Task<int> UpdateAsync(Studio studio)
     {
-        _context.Update(studio);
+        context.Update(studio);
         
-        return _context.SaveChangesAsync();
+        return context.SaveChangesAsync();
     }
     
     public Task<int> RemoveAsync(Studio studio)
     {
-        _context.Remove(studio);
+        context.Remove(studio);
         
-        return _context.SaveChangesAsync();
+        return context.SaveChangesAsync();
     }
 }

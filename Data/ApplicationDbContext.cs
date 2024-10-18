@@ -79,6 +79,8 @@ public class ApplicationDbContext : IdentityDbContext
         modelBuilder.Entity<Studio>()
             .HasMany(s => s.UsersAssigned)
             .WithOne(u => u.AssignedStudio)
+            .HasForeignKey(u => u.AssignedStudioId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
     }
 }

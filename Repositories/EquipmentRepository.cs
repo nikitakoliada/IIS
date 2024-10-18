@@ -4,18 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IIS.Repositories;
 
-public class EquipmentRepository
+public class EquipmentRepository(ApplicationDbContext context)
 {
-    private readonly ApplicationDbContext _context;
-
-    public EquipmentRepository(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-    
     public Task<List<Equipment>> GetAllWithIncludesAsync()
     {
-        return _context.Equipments
+        return context.Equipments
             .Include(e => e.EquipmentType)
             .Include(e => e.Studio)
             .ToListAsync();
@@ -23,12 +16,12 @@ public class EquipmentRepository
 
     public Task<Equipment?> GetByIdAsync(int id)
     {
-        return _context.Equipments.FirstOrDefaultAsync(e => e.Id == id);
+        return context.Equipments.FirstOrDefaultAsync(e => e.Id == id);
     }
     
     public Task<Equipment?> GetByIdWithIncludesAsync(int id)
     {
-        return _context.Equipments
+        return context.Equipments
             .Include(e => e.EquipmentType)
             .Include(e => e.Studio)
             .FirstOrDefaultAsync(e => e.Id == id);
@@ -36,22 +29,22 @@ public class EquipmentRepository
 
     public Task<int> CreateAsync(Equipment equipment)
     {
-        _context.Add(equipment);
+        context.Add(equipment);
 
-        return _context.SaveChangesAsync();
+        return context.SaveChangesAsync();
     }
 
     public Task<int> UpdateAsync(Equipment equipment)
     {
-        _context.Update(equipment);
+        context.Update(equipment);
 
-        return _context.SaveChangesAsync();
+        return context.SaveChangesAsync();
     }
 
     public Task<int> RemoveAsync(Equipment equipment)
     {
-        _context.Remove(equipment);
+        context.Remove(equipment);
 
-        return _context.SaveChangesAsync();
+        return context.SaveChangesAsync();
     }
 }
