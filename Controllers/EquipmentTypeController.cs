@@ -8,22 +8,17 @@ using Microsoft.EntityFrameworkCore;
 using IIS.Data;
 using IIS.Models;
 using IIS.Repositories;
+using Microsoft.AspNetCore.Authorization;
 
 namespace IIS.Controllers
 {
-    public class EquipmentTypeController : Controller
+    public class EquipmentTypeController(EquipmentTypeRepository equipmentTypeRepository) : Controller
     {
-        private readonly EquipmentTypeRepository _equipmentTypeRepository;
-
-        public EquipmentTypeController(EquipmentTypeRepository equipmentTypeRepository)
-        {
-            _equipmentTypeRepository = equipmentTypeRepository;
-        }
-
         // GET: EquipmentType
+        [Authorize(Roles = "Admin,StudioAdmin")]
         public async Task<IActionResult> Index(string searchString)
         {
-            var equipmentTypes = await _equipmentTypeRepository.GetAllAsync();
+            var equipmentTypes = await equipmentTypeRepository.GetAllAsync();
             
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -35,6 +30,7 @@ namespace IIS.Controllers
         }
 
         // GET: EquipmentType/Details/5
+        [Authorize(Roles = "Admin,StudioAdmin")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -42,7 +38,7 @@ namespace IIS.Controllers
                 return NotFound();
             }
 
-            var equipmentType = await _equipmentTypeRepository.GetByIdAsync(id.Value);
+            var equipmentType = await equipmentTypeRepository.GetByIdAsync(id.Value);
             if (equipmentType == null)
             {
                 return NotFound();
@@ -52,6 +48,7 @@ namespace IIS.Controllers
         }
 
         // GET: EquipmentType/Create
+        [Authorize(Roles = "Admin,StudioAdmin")]
         public IActionResult Create()
         {
             return View();
@@ -60,6 +57,7 @@ namespace IIS.Controllers
         // POST: EquipmentType/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,StudioAdmin")]
         public async Task<IActionResult> Create([Bind("Id,Name")] EquipmentType equipmentType)
         {
             if (!ModelState.IsValid)
@@ -67,12 +65,13 @@ namespace IIS.Controllers
                 return View(equipmentType);
             }
             
-            await _equipmentTypeRepository.CreateAsync(equipmentType);
+            await equipmentTypeRepository.CreateAsync(equipmentType);
             
             return RedirectToAction(nameof(Index));
         }
 
         // GET: EquipmentType/Edit/5
+        [Authorize(Roles = "Admin,StudioAdmin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -80,7 +79,7 @@ namespace IIS.Controllers
                 return NotFound();
             }
 
-            var equipmentType = await _equipmentTypeRepository.GetByIdAsync(id.Value);
+            var equipmentType = await equipmentTypeRepository.GetByIdAsync(id.Value);
             if (equipmentType == null)
             {
                 return NotFound();
@@ -92,6 +91,7 @@ namespace IIS.Controllers
         // POST: EquipmentType/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,StudioAdmin")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] EquipmentType equipmentType)
         {
             if (id != equipmentType.Id)
@@ -106,11 +106,11 @@ namespace IIS.Controllers
             
             try
             {
-                await _equipmentTypeRepository.UpdateAsync(equipmentType);
+                await equipmentTypeRepository.UpdateAsync(equipmentType);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (await _equipmentTypeRepository.GetByIdAsync(equipmentType.Id) == null)
+                if (await equipmentTypeRepository.GetByIdAsync(equipmentType.Id) == null)
                 {
                     return NotFound();
                 }
@@ -122,6 +122,7 @@ namespace IIS.Controllers
         }
 
         // GET: EquipmentType/Delete/5
+        [Authorize(Roles = "Admin,StudioAdmin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -129,7 +130,7 @@ namespace IIS.Controllers
                 return NotFound();
             }
 
-            var equipmentType = await _equipmentTypeRepository.GetByIdAsync(id.Value);
+            var equipmentType = await equipmentTypeRepository.GetByIdAsync(id.Value);
             if (equipmentType == null)
             {
                 return NotFound();
@@ -141,12 +142,13 @@ namespace IIS.Controllers
         // POST: EquipmentType/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,StudioAdmin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var equipmentType = await _equipmentTypeRepository.GetByIdAsync(id);
+            var equipmentType = await equipmentTypeRepository.GetByIdAsync(id);
             if (equipmentType != null)
             {
-                await _equipmentTypeRepository.RemoveAsync(equipmentType);
+                await equipmentTypeRepository.RemoveAsync(equipmentType);
             }
 
             return RedirectToAction(nameof(Index));
