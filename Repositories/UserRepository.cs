@@ -17,6 +17,22 @@ public class UserRepository(ApplicationDbContext context)
             .Include(u => u.AssignedStudio)
             .ToListAsync();
     }
+    
+    public Task<List<User>> GetAllFromAndWithoutStudioWithIncludesFromStudioAsync(int studioId)
+    {
+        return context.Users
+            .Include(u => u.AssignedStudio)
+            .Where(u => u.AssignedStudioId == studioId || u.AssignedStudioId == null)
+            .ToListAsync();
+    }
+
+    public Task<List<User>> GetAllFromStudioWithIncludesFromStudioAsync(int studioId)
+    {
+        return context.Users
+            .Include(u => u.AssignedStudio)
+            .Where(u => u.AssignedStudioId == studioId)
+            .ToListAsync();
+    }
 
     public Task<User?> GetByIdAsync(string id)
     {

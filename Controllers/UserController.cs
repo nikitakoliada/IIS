@@ -18,11 +18,26 @@ namespace IIS.Controllers
         : Controller
     {
         // GET: User
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,StudioAdmin,Teacher")]
         public async Task<IActionResult> Index(string searchString)
         {
-            var users = await userRepository.GetAllWithIncludesAsync();
-            
+            List<User> users;
+            var currentUser = await userManager.GetUserAsync(HttpContext.User);
+            var roles = userManager.GetRolesAsync(currentUser!).Result;
+
+            if (roles.Contains("Admin"))
+            {
+                users = await userRepository.GetAllWithIncludesAsync();
+            }
+            else if (roles.Contains("StudioAdmin"))
+            {
+                users = await userRepository.GetAllFromAndWithoutStudioWithIncludesFromStudioAsync(currentUser!.AssignedStudioId.Value);
+            }
+            else
+            {
+                users = await userRepository.GetAllFromStudioWithIncludesFromStudioAsync(currentUser!.AssignedStudioId.Value);
+            }
+
             if (!string.IsNullOrEmpty(searchString))
             {
                 users = [..users.Where(u => 
