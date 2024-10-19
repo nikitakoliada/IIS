@@ -10,7 +10,7 @@ using IIS.Repositories;
 // and in services add _userManager.AddToRoleAsync(user, role) for new user 
 async Task CreateRoles(RoleManager<IdentityRole> roleManager)
 {
-    string[] roleNames = { "Admin", "StudioAdmin", "Teacher" };
+    string[] roleNames = { "Admin", "StudioAdmin", "Teacher", "Student" };
     IdentityResult roleResult;
 
     foreach (var roleName in roleNames)
