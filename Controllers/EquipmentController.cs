@@ -11,23 +11,16 @@ using IIS.Repositories;
 
 namespace IIS.Controllers
 {
-    public class EquipmentController : Controller
+    public class EquipmentController(
+        EquipmentTypeRepository equipmentTypeRepository,
+        StudioRepository studioRepository,
+        EquipmentRepository equipmentRepository)
+        : Controller
     {
-        private readonly EquipmentTypeRepository _equipmentTypeRepository;
-        private readonly StudioRepository _studioRepository;
-        private readonly EquipmentRepository _equipmentRepository;
-        
-        public EquipmentController(EquipmentTypeRepository equipmentTypeRepository, StudioRepository studioRepository, EquipmentRepository equipmentRepository)
-        {
-            _equipmentTypeRepository = equipmentTypeRepository;
-            _studioRepository = studioRepository;
-            _equipmentRepository = equipmentRepository;
-        }
-
         // GET: Equipment
         public async Task<IActionResult> Index()
         {
-            return View(await _equipmentRepository.GetAllWithIncludesAsync());
+            return View(await equipmentRepository.GetAllWithIncludesAsync());
         }
 
         // GET: Equipment/Details/5
@@ -38,7 +31,7 @@ namespace IIS.Controllers
                 return NotFound();
             }
 
-            var equipment = await _equipmentRepository.GetByIdWithIncludesAsync(id.Value);
+            var equipment = await equipmentRepository.GetByIdWithIncludesAsync(id.Value);
             if (equipment == null)
             {
                 return NotFound();
@@ -50,8 +43,8 @@ namespace IIS.Controllers
         // GET: Equipment/Create
         public async Task<IActionResult> Create()
         {
-            ViewData["EquipmentTypeId"] = new SelectList(await _equipmentTypeRepository.GetAllAsync(), "Id", "Name");
-            ViewData["StudioId"] = new SelectList(await _studioRepository.GetAllAsync(), "Id", "Name");
+            ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name");
+            ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
             
             return View();
         }
@@ -63,13 +56,13 @@ namespace IIS.Controllers
         {
             if (!ModelState.IsValid)
             {
-                ViewData["EquipmentTypeId"] = new SelectList(await _equipmentTypeRepository.GetAllAsync(), "Id", "Name");
-                ViewData["StudioId"] = new SelectList(await _studioRepository.GetAllAsync(), "Id", "Name");
+                ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name");
+                ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
                 
                 return View(equipment);
             }
             
-            await _equipmentRepository.CreateAsync(equipment);
+            await equipmentRepository.CreateAsync(equipment);
             
             return RedirectToAction(nameof(Index));
         }
@@ -82,14 +75,14 @@ namespace IIS.Controllers
                 return NotFound();
             }
 
-            var equipment = await _equipmentRepository.GetByIdAsync(id.Value);
+            var equipment = await equipmentRepository.GetByIdAsync(id.Value);
             if (equipment == null)
             {
                 return NotFound();
             }
             
-            ViewData["EquipmentTypeId"] = new SelectList(await _equipmentTypeRepository.GetAllAsync(), "Id", "Name");
-            ViewData["StudioId"] = new SelectList(await _studioRepository.GetAllAsync(), "Id", "Name");
+            ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name");
+            ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
             
             return View(equipment);
         }
@@ -106,19 +99,19 @@ namespace IIS.Controllers
             
             if (!ModelState.IsValid)
             {
-                ViewData["EquipmentTypeId"] = new SelectList(await _equipmentTypeRepository.GetAllAsync(), "Id", "Name");
-                ViewData["StudioId"] = new SelectList(await _studioRepository.GetAllAsync(), "Id", "Name");
+                ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name");
+                ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
                 
                 return View(equipment);
             }
 
             try
             {
-                await _equipmentRepository.UpdateAsync(equipment);
+                await equipmentRepository.UpdateAsync(equipment);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (await _equipmentRepository.GetByIdAsync(equipment.Id) == null) // TODO: Check if this is correct
+                if (await equipmentRepository.GetByIdAsync(equipment.Id) == null) // TODO: Check if this is correct
                 {
                     return NotFound();
                 }
@@ -137,7 +130,7 @@ namespace IIS.Controllers
                 return NotFound();
             }
 
-            var equipment = await _equipmentRepository.GetByIdWithIncludesAsync(id.Value);
+            var equipment = await equipmentRepository.GetByIdWithIncludesAsync(id.Value);
             if (equipment == null)
             {
                 return NotFound();
@@ -151,13 +144,13 @@ namespace IIS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var equipment = await _equipmentRepository.GetByIdAsync(id);
+            var equipment = await equipmentRepository.GetByIdAsync(id);
             if (equipment == null)
             {
                 return NotFound();
             }
 
-            await _equipmentRepository.RemoveAsync(equipment);
+            await equipmentRepository.RemoveAsync(equipment);
             
             return RedirectToAction(nameof(Index));
         }
