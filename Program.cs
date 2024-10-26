@@ -51,6 +51,7 @@ builder.Services.AddControllersWithViews();
 
 // Add repositories
 builder.Services.AddScoped<EquipmentTypeRepository>();
+builder.Services.AddScoped<RentalDayIntervalRepository>();
 builder.Services.AddScoped<StudioRepository>();
 builder.Services.AddScoped<EquipmentRepository>();
 builder.Services.AddScoped<UserRepository>();
