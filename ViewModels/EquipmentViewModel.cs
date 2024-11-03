@@ -18,6 +18,6 @@ public class EquipmentViewModel
 
     public int EquipmentTypeId { get; set; }
 
-    public List<RentalDayIntervalViewModel> RentalDayIntervals { get; set; } = new List<RentalDayIntervalViewModel>();
+    public List<RentalDayIntervalViewModel> RentalDayIntervals { get; set; }
 
 }
