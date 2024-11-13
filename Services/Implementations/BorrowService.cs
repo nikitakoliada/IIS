@@ -25,7 +25,7 @@ public class BorrowService : IBorrowService
         
         foreach(var borrow in borrows)
         {
-            if (startDate - borrow.FromDate > TimeSpan.FromDays(1))
+            if (Math.Abs((startDate - borrow.FromDate).Days) > 1)
             {
                 freeIntervals.Add((startDate, borrow.FromDate));
             }

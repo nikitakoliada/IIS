@@ -22,6 +22,15 @@ public class BorrowRepository(ApplicationDbContext context)
             .Include(e => e.Equipment)
             .ToListAsync();
     }
+    
+    public Task<List<Borrow>> GetByStudioId(int studioId)
+    {
+        return context.Reservations
+            .Include(e => e.User)
+            .Where(x => x.User.AssignedStudioId == studioId)
+            .Include(e => e.Equipment)
+            .ToListAsync();
+    }
 
     public Task<Borrow?> GetByIdAsync(int id)
     {
