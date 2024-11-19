@@ -9,7 +9,7 @@ public class CreateBorrowViewModel : IValidatableObject
     public DateTime ToDate { get; set; }
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (FromDate <= DateTime.Today)
+        if (FromDate < DateTime.Today)
         {
             yield return new ValidationResult(
                 "The start date cannot be in the past.",
@@ -17,7 +17,7 @@ public class CreateBorrowViewModel : IValidatableObject
             );
         }
         
-        if (ToDate <= DateTime.Today)
+        if (ToDate < DateTime.Today)
         {
             yield return new ValidationResult(
                 "The end date cannot be in the past.",

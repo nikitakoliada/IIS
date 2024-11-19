@@ -80,19 +80,25 @@ namespace IIS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateBorrowViewModel borrow)
         {
+            Task<IActionResult> ReturnView(CreateBorrowViewModel borrow)
+            {
+                ViewData["EquipmentId"] = borrow.EquipmentId;
+                return Task.FromResult<IActionResult>(View(borrow));
+            }
+            
             if (ModelState.IsValid)
             {
                 var maxRentalTime = (await equipmentRepository.GetByIdAsync(borrow.EquipmentId))?.MaxRentalTime;
                 if (maxRentalTime == null)
                 {
-                    return View(borrow);
+                    return await ReturnView(borrow);
                 }
 
                 if (borrow.ToDate - borrow.FromDate > maxRentalTime.Value)
                 {
                     ModelState.AddModelError("",
                         $"Cannot make a reservation for more than {maxRentalTime.Value.Days} days");
-                    return View(borrow);
+                    return await ReturnView(borrow);
                 }
                 
                 if (!await borrowService.IsEquipmentAvailable(borrow.EquipmentId, (borrow.FromDate, borrow.ToDate)))
@@ -104,7 +110,7 @@ namespace IIS.Controllers
                         $"The selected interval is occupied. The closest interval is " +
                         $"from {closestFreeInterval.From.ToShortDateString()} {(closestFreeInterval.To != DateTime.MaxValue ? "to " + closestFreeInterval.To.ToShortDateString() : string.Empty)}");
 
-                    return View(borrow);
+                    return await ReturnView(borrow);
                 }
 
                 await borrowRepository.CreateAsync(new Borrow()
@@ -118,8 +124,7 @@ namespace IIS.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewData["EquipmentId"] = borrow.EquipmentId;
-            return View(borrow);
+            return await ReturnView(borrow);
         }
         
 
