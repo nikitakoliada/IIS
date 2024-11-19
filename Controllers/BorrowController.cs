@@ -1,21 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
-using IIS.Areas.Student.ViewModels;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using IIS.Data;
 using IIS.Enums;
 using IIS.Models;
 using IIS.Repositories;
 using IIS.Services.Abstractions;
+using IIS.ViewModels;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
-namespace IIS.Areas.Student.Controllers
+namespace IIS.Controllers
 {
-    [Area("Student")]
     public class BorrowController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -38,6 +32,7 @@ namespace IIS.Areas.Student.Controllers
         public async Task<IActionResult> Index()
         {
             List<Borrow> borrows;
+            
             if (User.IsInRole("Student"))
             {
                 borrows = await borrowRepository.GetByUserId(GetUserId());
@@ -47,7 +42,8 @@ namespace IIS.Areas.Student.Controllers
                 var user = await userRepository.GetByIdAsync(GetUserId());
                 borrows = await borrowRepository.GetByStudioId(user.AssignedStudioId.Value);
             }
-            return View(borrows.Select(ListBorrowViewModel.FromBorrowModel).ToList());
+            
+            return View(borrows.Select(x => ListBorrowViewModel.FromBorrowModel(x, GetUserId())).ToList());
         }
 
         // GET: Student/Borrow/Details/5
@@ -86,6 +82,19 @@ namespace IIS.Areas.Student.Controllers
         {
             if (ModelState.IsValid)
             {
+                var maxRentalTime = (await equipmentRepository.GetByIdAsync(borrow.EquipmentId))?.MaxRentalTime;
+                if (maxRentalTime == null)
+                {
+                    return View(borrow);
+                }
+
+                if (borrow.ToDate - borrow.FromDate > maxRentalTime.Value)
+                {
+                    ModelState.AddModelError("",
+                        $"Cannot make a reservation for more than {maxRentalTime.Value.Days} days");
+                    return View(borrow);
+                }
+                
                 if (!await borrowService.IsEquipmentAvailable(borrow.EquipmentId, (borrow.FromDate, borrow.ToDate)))
                 {
                     var closestFreeInterval =

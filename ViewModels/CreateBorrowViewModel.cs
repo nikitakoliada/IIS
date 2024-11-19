@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace IIS.Areas.Student.ViewModels;
+namespace IIS.ViewModels;
 
 public class CreateBorrowViewModel : IValidatableObject
 {

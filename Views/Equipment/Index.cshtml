@@ -72,7 +72,7 @@
                 else if (User.IsInRole("Student"))
                 {
                     @("|")
-                    <a asp-area="Student" asp-controller="Borrow" asp-action="Create" asp-route-id="@item.Id">Borrow</a>
+                    <a asp-controller="Borrow" asp-action="Create" asp-route-id="@item.Id">Borrow</a>
                 }
             </td>
         </tr>

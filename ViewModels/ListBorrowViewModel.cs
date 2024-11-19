@@ -1,7 +1,7 @@
 using IIS.Enums;
 using IIS.Models;
 
-namespace IIS.Areas.Student.ViewModels;
+namespace IIS.ViewModels;
 
 public class ListBorrowViewModel
 {
@@ -9,11 +9,12 @@ public class ListBorrowViewModel
     public string EquipmentName { get; set; } = string.Empty;
     public string UserId { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
+    public bool CanBeDeleted { get; set; }
     public DateTime FromDate { get; set; }
     public DateTime ToDate { get; set; }
     public BorrowState State { get; set; }
 
-    public static ListBorrowViewModel FromBorrowModel(Borrow model) => new ListBorrowViewModel()
+    public static ListBorrowViewModel FromBorrowModel(Borrow model, string userId) => new ListBorrowViewModel()
     {
         Id = model.Id,
         EquipmentName = model.Equipment.Name,
@@ -21,6 +22,7 @@ public class ListBorrowViewModel
         ToDate = model.ToDate,
         State = model.State,
         UserId = model.UserId,
-        Username = model.User.Name
+        Username = model.User.Name,
+        CanBeDeleted = userId == model.UserId && model.State == BorrowState.Pending
     };
 }

@@ -1,10 +1,10 @@
 @using IIS.Enums
-@model IEnumerable<IIS.Areas.Student.ViewModels.ListBorrowViewModel>
+@model IEnumerable<IIS.ViewModels.ListBorrowViewModel>
 
 
 <script>
     function sendData(action, id) {
-        fetch(`/Student/Borrow/${action}/${id}`, {
+        fetch(`/Borrow/${action}/${id}`, {
             method: 'POST'
         })
         .then(response => {
@@ -81,7 +81,7 @@
             </td>
             <td>
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> 
-                @if (User.IsInRole("Student") && item.State == BorrowState.Pending)
+                @if (@item.CanBeDeleted && item.State == BorrowState.Pending)
                 {
                     @("|") <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
                 }
