@@ -8,7 +8,7 @@ public class ListBorrowViewModel
     public int Id { get; set; }
     public string EquipmentName { get; set; } = string.Empty;
     public string UserId { get; set; } = string.Empty;
-    public string Username { get; set; } = string.Empty;
+    public string UserEmail { get; set; } = string.Empty;
     public bool CanBeDeleted { get; set; }
     public DateTime FromDate { get; set; }
     public DateTime ToDate { get; set; }
@@ -22,7 +22,7 @@ public class ListBorrowViewModel
         ToDate = model.ToDate,
         State = model.State,
         UserId = model.UserId,
-        Username = model.User.Name,
+        UserEmail = model.User.Email!,
         CanBeDeleted = userId == model.UserId && model.State == BorrowState.Pending
     };
 }

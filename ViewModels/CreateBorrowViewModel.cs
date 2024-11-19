@@ -25,19 +25,11 @@ public class CreateBorrowViewModel : IValidatableObject
             );
         }
         
-        if (FromDate >= ToDate)
+        if (FromDate > ToDate)
         {
             yield return new ValidationResult(
                 "The start date must be before the end date.",
                 new[] { nameof(FromDate) }
-            );
-        }
-
-        if ((ToDate - FromDate).TotalDays < 1)
-        {
-            yield return new ValidationResult(
-                "The interval between start and end date must be at least 1 day.",
-                new[] { nameof(FromDate), nameof(ToDate) }
             );
         }
     }

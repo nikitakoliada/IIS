@@ -27,16 +27,18 @@ public class BorrowService : IBorrowService
         {
             if (borrow.FromDate < startDate)
             {
-                startDate = borrow.ToDate;
+                startDate = borrow.ToDate + TimeSpan.FromDays(1);
                 continue;
             }
+
+            var freeIntervalEnd = borrow.FromDate - TimeSpan.FromDays(1);
             
-            if (Math.Abs((startDate - borrow.FromDate).Days) > 1)
+            if ((freeIntervalEnd - startDate).Days >= 0)
             {
-                freeIntervals.Add((startDate, borrow.FromDate));
+                freeIntervals.Add((startDate, freeIntervalEnd));
             }
 
-            startDate = borrow.ToDate;
+            startDate = borrow.ToDate + TimeSpan.FromDays(1);
         }
 
         freeIntervals.Add((startDate, DateTime.MaxValue));

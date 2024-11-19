@@ -39,7 +39,7 @@
         @if (AnyRoleThanStudent())
         {
             <th>
-                @Html.DisplayNameFor(model => model.Username)
+                @Html.DisplayNameFor(model => model.UserEmail)
             </th>
         }
         <th>
@@ -64,14 +64,14 @@
             @if (AnyRoleThanStudent())
             {
                 <td>
-                    <a asp-controller="User" asp-action="Details">@item.Username</a>
+                    <a asp-controller="User" asp-action="Details">@item.UserEmail</a>
                 </td>
             }
             <td>
-                @Html.DisplayFor(modelItem => item.FromDate)
+                @item.FromDate.ToShortDateString()
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.ToDate)
+                @item.ToDate.ToShortDateString()
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.State)
