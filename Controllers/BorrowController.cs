@@ -32,7 +32,7 @@ namespace IIS.Controllers
         public async Task<IActionResult> Index()
         {
             List<Borrow> borrows;
-            
+
             if (User.IsInRole("Student"))
             {
                 borrows = await borrowRepository.GetByUserId(GetUserId());
@@ -42,7 +42,7 @@ namespace IIS.Controllers
                 var user = await userRepository.GetByIdAsync(GetUserId());
                 borrows = await borrowRepository.GetByStudioId(user.AssignedStudioId.Value);
             }
-            
+
             return View(borrows.Select(x => ListBorrowViewModel.FromBorrowModel(x, GetUserId())).ToList());
         }
 
@@ -67,10 +67,25 @@ namespace IIS.Controllers
         }
 
         // GET: Student/Borrow/Create/1
-        public Task<IActionResult> Create(int id)
+        public async Task<IActionResult> Create(int id)
         {
+            var correspondingEquipment = await equipmentRepository.GetByIdWithIncludesAsync(id);
+            var user = await userRepository.GetByIdAsync(GetUserId());
+         
+            if (correspondingEquipment == null)
+            {
+                ModelState.AddModelError("",
+                    $"Equipment you are trying to borrow does not exist");
+                return NotFound();
+            }
+            
+            if (correspondingEquipment.UsersForbiddenToBorrow.Any(x => x.Id == GetUserId()) ||
+                user.AssignedStudioId == null || user.AssignedStudioId != correspondingEquipment.StudioId)
+            {
+                return Forbid();
+            }
             ViewData["EquipmentId"] = id;
-            return Task.FromResult<IActionResult>(View());
+            return View();
         }
 
         // POST: Student/Borrow/Create
@@ -85,22 +100,35 @@ namespace IIS.Controllers
                 ViewData["EquipmentId"] = borrow.EquipmentId;
                 return Task.FromResult<IActionResult>(View(borrow));
             }
-            
+
             if (ModelState.IsValid)
             {
-                var maxRentalTime = (await equipmentRepository.GetByIdAsync(borrow.EquipmentId))?.MaxRentalTime;
-                if (maxRentalTime == null)
+                var correspondingEquipment = await equipmentRepository.GetByIdWithIncludesAsync(borrow.EquipmentId);
+                var user = await userRepository.GetByIdAsync(GetUserId());
+                if (correspondingEquipment == null)
                 {
+                    ModelState.AddModelError("",
+                        $"Equipment you are trying to borrow does not exist");
                     return await ReturnView(borrow);
                 }
 
-                if (borrow.ToDate - borrow.FromDate > maxRentalTime.Value)
+                if (correspondingEquipment.UsersForbiddenToBorrow.Any(x => x.Id == GetUserId()) ||
+                    user.AssignedStudioId == null || user.AssignedStudioId != correspondingEquipment.StudioId)
                 {
                     ModelState.AddModelError("",
-                        $"Cannot make a reservation for more than {maxRentalTime.Value.Days} days");
+                        $"You are not allowed to borrow this equipment");
                     return await ReturnView(borrow);
                 }
-                
+
+
+                if (correspondingEquipment.MaxRentalTime != null &&
+                    borrow.ToDate - borrow.FromDate > correspondingEquipment.MaxRentalTime.Value)
+                {
+                    ModelState.AddModelError("",
+                        $"Cannot make a reservation for more than {correspondingEquipment.MaxRentalTime.Value.Days} days");
+                    return await ReturnView(borrow);
+                }
+
                 if (!await borrowService.IsEquipmentAvailable(borrow.EquipmentId, (borrow.FromDate, borrow.ToDate)))
                 {
                     var closestFreeInterval =
@@ -126,7 +154,7 @@ namespace IIS.Controllers
 
             return await ReturnView(borrow);
         }
-        
+
 
         // GET: Student/Borrow/Delete/5
         public async Task<IActionResult> Delete(int? id)
@@ -159,28 +187,28 @@ namespace IIS.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-        
+
         // POST: Student/Borrow/Accept/5
         [HttpPost, ActionName("Accept")]
         public Task<IActionResult> AcceptBorrow(int id)
         {
             return ChangeState(id, BorrowState.Pending, BorrowState.Accepted);
         }
-        
+
         // POST: Student/Borrow/Reject/5
         [HttpPost, ActionName("Reject")]
         public Task<IActionResult> RejectBorrow(int id)
         {
             return ChangeState(id, BorrowState.Pending, BorrowState.Rejected);
         }
-        
+
         // POST: Student/Borrow/Returned/5
         [HttpPost, ActionName("Returned")]
         public Task<IActionResult> BorrowReturned(int id)
         {
             return ChangeState(id, BorrowState.Accepted, BorrowState.Returned);
         }
-        
+
         private async Task<IActionResult> ChangeState(int id, BorrowState requiredState, BorrowState newState)
         {
             var borrow = await borrowRepository.GetByIdAsync(id);
@@ -200,7 +228,7 @@ namespace IIS.Controllers
 
             return NoContent();
         }
-        
+
         private string GetUserId() => User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
     }
 }
