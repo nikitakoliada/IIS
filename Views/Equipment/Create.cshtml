@@ -1,7 +1,7 @@
-@model IIS.Models.Equipment
+@model IIS.ViewModels.EquipmentViewModel
 
 @{
-    ViewData["Title"] = "Create";
+ViewData["Title"] = "Create";
 }
 
 <h1>Create</h1>
@@ -10,8 +10,9 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Create">
+        <form id="eq_form" asp-action="Create" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
             <div class="form-group">
                 <label asp-for="Name" class="control-label"></label>
                 <input asp-for="Name" class="form-control" />
@@ -39,13 +40,53 @@
             </div>
             <div class="form-group">
                 <label asp-for="StudioId" class="control-label"></label>
-                <select asp-for="StudioId" class ="form-control" asp-items="ViewBag.StudioId"></select>
+                <select asp-for="StudioId" class="form-control" asp-items="ViewBag.StudioId"></select>
             </div>
             <div class="form-group">
                 <label asp-for="EquipmentTypeId" class="control-label"></label>
-                <select asp-for="EquipmentTypeId" class ="form-control" asp-items="ViewBag.EquipmentTypeId"></select>
+                <select asp-for="EquipmentTypeId" class="form-control" asp-items="ViewBag.EquipmentTypeId"></select>
             </div>
+
+            <!-- Button to show the Rental Interval section -->
             <div class="form-group">
+                <label class="control-label">Add Rental Interval</label>
+                <button type="button" class="btn btn-secondary" onclick="showIntervalSection()">+</button>
+            </div>
+
+            <!-- Inline section for adding Rental Interval details -->
+            <div id="intervalSection" class="mt-3" style="display:none;">
+                <h5>Rental Interval Details</h5>
+                <div class="form-group">
+                    <label for="dayOfWeekSelect" class="control-label">Day of the Week</label>
+                    <select id="dayOfWeekSelect" class="form-control">
+                        <option value="Sunday">Sunday</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="pickupPlaceInput" class="control-label">Place of Pickup</label>
+                    <input type="text" id="pickupPlaceInput" class="form-control" placeholder="Enter pickup place" />
+                </div>
+                <div class="form-group">
+                    <label for="startTimeInput" class="control-label">Start Time</label>
+                    <input type="time" id="startTimeInput" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="endTimeInput" class="control-label">End Time</label>
+                    <input type="time" id="endTimeInput" class="form-control" />
+                </div>
+                <button type="button" class="btn btn-primary mt-3" onclick="addRentalInterval()">Add Interval</button>
+            </div>
+
+            <!-- Placeholder to display the selected Rental Intervals as labels -->
+            <div id="selectedIntervalsContainer" class="mt-3"></div>
+
+            <div class="form-group mt-3">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>
         </form>
@@ -56,3 +97,73 @@
     <a asp-action="Index">Back to List</a>
 </div>
 
+<script>
+    let rentalIntervalIndex = 0; // Initialize the rental interval index
+
+    function showIntervalSection() {
+        document.getElementById("intervalSection").style.display = "block";
+    }
+
+    function addRentalInterval() {
+        const dayOfWeek = document.getElementById("dayOfWeekSelect").value;
+        const pickupPlace = document.getElementById("pickupPlaceInput").value;
+        const startTime = document.getElementById("startTimeInput").value;
+        const endTime = document.getElementById("endTimeInput").value;
+
+        if (dayOfWeek && pickupPlace && startTime && endTime) {
+            const intervalsContainer = document.getElementById("selectedIntervalsContainer");
+
+            // Create a new label element with selected interval details
+            const intervalDiv = document.createElement("div");
+            intervalDiv.className = "badge bg-secondary m-1 p-2 d-flex align-items-center";
+            intervalDiv.setAttribute("data-index", rentalIntervalIndex);
+
+            const label = document.createElement("span");
+            label.textContent = `Day: ${dayOfWeek}, Place: ${pickupPlace}, Start: ${startTime}, End: ${endTime}`;
+            intervalDiv.appendChild(label);
+
+            // Add delete button to remove this interval
+            const deleteButton = document.createElement("button");
+            deleteButton.className = "btn btn-danger btn-sm ms-2";
+            deleteButton.textContent = "x";
+            deleteButton.onclick = function() {
+                removeRentalInterval(intervalDiv, rentalIntervalIndex);
+            };
+            intervalDiv.appendChild(deleteButton);
+
+            intervalsContainer.appendChild(intervalDiv);
+
+            const form = document.getElementById("eq_form");
+
+            // Add hidden inputs for model binding
+            addHiddenInput(form, `RentalDayIntervals[${rentalIntervalIndex}].DayOfWeek`, dayOfWeek);
+            addHiddenInput(form, `RentalDayIntervals[${rentalIntervalIndex}].Place`, pickupPlace);
+            addHiddenInput(form, `RentalDayIntervals[${rentalIntervalIndex}].StartTime`, startTime);
+            addHiddenInput(form, `RentalDayIntervals[${rentalIntervalIndex}].EndTime`, endTime);
+
+            // Clear input fields after adding an interval
+            document.getElementById("pickupPlaceInput").value = "";
+            document.getElementById("startTimeInput").value = "";
+            document.getElementById("endTimeInput").value = "";
+            document.getElementById("intervalSection").style.display = "none";
+
+            rentalIntervalIndex++; // Increment the index for the next interval
+        }
+    }
+
+    function addHiddenInput(form, name, value) {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = name;
+        input.id = name;
+        input.value = value;
+        form.appendChild(input);
+    }
+
+    function removeRentalInterval(intervalDiv, index) {
+        intervalDiv.remove();
+
+        const form = document.querySelector("form");
+        form.querySelectorAll(`input[name^='RentalDayIntervals[${index}]']`).forEach(input => input.remove());
+    }
+</script>

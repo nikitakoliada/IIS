@@ -54,6 +54,27 @@
         </dd>
     </dl>
 </div>
+<h4>Rental Day Intervals</h4>
+<hr />
+
+@if (Model.RentalDayIntervals != null && Model.RentalDayIntervals.Any())
+{
+<div class="list-group">
+    @foreach (var interval in Model.RentalDayIntervals)
+    {
+    <div class="list-group-item">
+        <p><strong>Day of Week:</strong> @interval.DayOfWeek</p>
+        <p><strong>Place:</strong> @interval.Place</p>
+        <p><strong>Start Time:</strong> @interval.StartTime.ToString(@"hh\:mm")</p>
+        <p><strong>End Time:</strong> @interval.EndTime.ToString(@"hh\:mm")</p>
+    </div>
+    }
+</div>
+}
+else
+{
+<p>No rental intervals available.</p>
+}
 <div>
     <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
     <a asp-action="Index">Back to List</a>

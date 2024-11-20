@@ -8,13 +8,15 @@ using Microsoft.EntityFrameworkCore;
 using IIS.Data;
 using IIS.Models;
 using IIS.Repositories;
+using IIS.ViewModels;
 
 namespace IIS.Controllers
 {
     public class EquipmentController(
         EquipmentTypeRepository equipmentTypeRepository,
         StudioRepository studioRepository,
-        EquipmentRepository equipmentRepository)
+        EquipmentRepository equipmentRepository,
+        RentalDayIntervalRepository rentalDayIntervalRepository)
         : Controller
     {
         // GET: Equipment
@@ -36,7 +38,7 @@ namespace IIS.Controllers
             {
                 return NotFound();
             }
-            
+
             return View(equipment);
         }
 
@@ -45,73 +47,157 @@ namespace IIS.Controllers
         {
             ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name");
             ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
-            
+
             return View();
         }
 
         // POST: Equipment/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,ManufactureYear,PurchaseDate,Image,MaxRentalTime,StudioId,EquipmentTypeId")] Equipment equipment)
+        public async Task<IActionResult> Create(EquipmentViewModel model)
         {
             if (!ModelState.IsValid)
             {
                 ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name");
                 ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
-                
-                return View(equipment);
+                return View(model);
             }
-            
+            Console.WriteLine(model.RentalDayIntervals.Count);
+            foreach (var interval in model.RentalDayIntervals)
+            {
+                var intervalModel = new RentalDayInterval
+                {
+                    DayOfWeek = interval.DayOfWeek,
+                    StartTime = interval.StartTime,
+                    EndTime = interval.EndTime,
+                    Place = interval.Place,
+                    EquipmentId = model.Id
+                };
+                await rentalDayIntervalRepository.CreateAsync(intervalModel);
+            }
+
+            // Map the view model to the main Equipment model
+            var equipment = new Equipment
+            {
+                Name = model.Name,
+                ManufactureYear = model.ManufactureYear,
+                PurchaseDate = model.PurchaseDate,
+                Image = model.Image,
+                MaxRentalTime = model.MaxRentalTime,
+                StudioId = model.StudioId,
+                EquipmentTypeId = model.EquipmentTypeId,
+                RentalDayIntervals = model.RentalDayIntervals.Select(interval => new RentalDayInterval
+                {
+                    DayOfWeek = interval.DayOfWeek,
+                    StartTime = interval.StartTime,
+                    EndTime = interval.EndTime,
+                    Place = interval.Place,
+                    EquipmentId = model.Id
+                }).ToList()
+            };
+
             await equipmentRepository.CreateAsync(equipment);
-            
+
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Equipment/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+       public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var equipment = await equipmentRepository.GetByIdAsync(id.Value);
+            var equipment = await equipmentRepository.GetByIdWithIncludesAsync(id.Value);
             if (equipment == null)
             {
                 return NotFound();
             }
-            
-            ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name");
-            ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
-            
-            return View(equipment);
+
+            // Prepare the view model
+            var model = new EquipmentViewModel
+            {
+                Id = equipment.Id,
+                Name = equipment.Name,
+                ManufactureYear = equipment.ManufactureYear,
+                PurchaseDate = equipment.PurchaseDate,
+                Image = equipment.Image,
+                MaxRentalTime = equipment.MaxRentalTime,
+                StudioId = equipment.StudioId,
+                EquipmentTypeId = equipment.EquipmentTypeId,
+                RentalDayIntervals = equipment.RentalDayIntervals.Select(interval => new RentalDayIntervalViewModel
+                {
+                    DayOfWeek = interval.DayOfWeek,
+                    StartTime = interval.StartTime,
+                    EndTime = interval.EndTime,
+                    Place = interval.Place
+                }).ToList()
+            };
+
+            ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name", equipment.EquipmentTypeId);
+            ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name", equipment.StudioId);
+
+            return View(model);
         }
 
         // POST: Equipment/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,ManufactureYear,PurchaseDate,Image,MaxRentalTime,StudioId,EquipmentTypeId")] Equipment equipment)
+        public async Task<IActionResult> Edit(int id, EquipmentViewModel model)
         {
-            if (id != equipment.Id)
+            if (id != model.Id)
             {
                 return NotFound();
             }
-            
+
             if (!ModelState.IsValid)
             {
-                ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name");
-                ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
-                
-                return View(equipment);
+                ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name", model.EquipmentTypeId);
+                ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name", model.StudioId);
+                return View(model);
             }
 
             try
             {
+                // Update the main Equipment data
+                var equipment = await equipmentRepository.GetByIdWithIncludesAsync(id);
+                equipment.Name = model.Name;
+                equipment.ManufactureYear = model.ManufactureYear;
+                equipment.PurchaseDate = model.PurchaseDate;
+                equipment.Image = model.Image;
+                equipment.MaxRentalTime = model.MaxRentalTime;
+                equipment.StudioId = model.StudioId;
+                equipment.EquipmentTypeId = model.EquipmentTypeId;
+
+                // Update RentalDayIntervals
+                var existingIntervals = equipment.RentalDayIntervals.ToList();
+                equipment.RentalDayIntervals.Clear();
+
+                // Delete removed intervals
+                foreach (var interval in existingIntervals)
+                {
+                    await rentalDayIntervalRepository.DeleteAsync(interval.Id);
+                }
+
+                // Add updated/new intervals
+                foreach (var interval in model.RentalDayIntervals)
+                {
+                    var intervalModel = new RentalDayInterval
+                    {
+                        DayOfWeek = interval.DayOfWeek,
+                        StartTime = interval.StartTime,
+                        EndTime = interval.EndTime,
+                        Place = interval.Place,
+                        EquipmentId = equipment.Id
+                    };
+                    equipment.RentalDayIntervals.Add(intervalModel);
+                }
+
                 await equipmentRepository.UpdateAsync(equipment);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (await equipmentRepository.GetByIdAsync(equipment.Id) == null) // TODO: Check if this is correct
+                if (await equipmentRepository.GetByIdAsync(model.Id) == null)
                 {
                     return NotFound();
                 }
@@ -121,6 +207,7 @@ namespace IIS.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
 
         // GET: Equipment/Delete/5
         public async Task<IActionResult> Delete(int? id)
@@ -151,7 +238,7 @@ namespace IIS.Controllers
             }
 
             await equipmentRepository.RemoveAsync(equipment);
-            
+
             return RedirectToAction(nameof(Index));
         }
     }
