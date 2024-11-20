@@ -15,9 +15,12 @@
             <th>
                 @Html.DisplayNameFor(model => model.UserName)
             </th>
-            <th>
-                @Html.DisplayNameFor(model => model.AssignedStudio)
-            </th>
+            @if (ViewData["ShowStudioFilter"] != null && (bool)ViewData["ShowStudioFilter"])
+            { 
+                <th>
+                    @Html.DisplayNameFor(model => model.AssignedStudio)
+                </th>   
+            }
             <th>
                 @Html.DisplayNameFor(model => model.BirthDate)
             </th>
@@ -38,9 +41,12 @@
             <td>
                 @Html.DisplayFor(modelItem => item.UserName)
             </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AssignedStudio.Name)
-            </td>
+            @if (ViewData["ShowStudioFilter"] != null && (bool)ViewData["ShowStudioFilter"])
+            { 
+                <td>
+                    @Html.DisplayFor(modelItem => item.AssignedStudio.Name)
+                </td>
+            }
             <td>
                 @Html.DisplayFor(modelItem => item.BirthDate)
             </td>
@@ -50,7 +56,10 @@
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                @if (ViewData["IsAdmin"] != null && (bool)ViewData["IsAdmin"])
+                {
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                }
             </td>
         </tr>
 }
