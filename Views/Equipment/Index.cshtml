@@ -62,18 +62,15 @@
                 @Html.DisplayFor(modelItem => item.EquipmentType.Name)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a>
-                @if (User.IsInRole("Teacher") || User.IsInRole("Admin"))
+                @if (User.IsInRole("Admin") || User.IsInRole("StudioAdmin") || User.IsInRole("Teacher"))
                 {
-                    @("|")
-                    <a asp-action="Delete" asp-route-id="@item.Id"> Delete </a>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                    <p> | </p>
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    <p> | </p>
                 }
-                else if (User.IsInRole("Student"))
-                {
-                    @("|")
-                    <a asp-controller="Borrow" asp-action="Create" asp-route-id="@item.Id">Borrow</a>
-                }
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-controller="Borrow" asp-action="Create" asp-route-id="@item.Id">Borrow</a>
             </td>
         </tr>
     }

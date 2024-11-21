@@ -9,7 +9,7 @@ ViewData["Title"] = "Edit Equipment";
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit">
+        <form id="eq_form" asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <!-- Equipment fields -->
@@ -194,7 +194,7 @@ ViewData["Title"] = "Edit Equipment";
 
             intervalsContainer.appendChild(intervalDiv);
 
-            const form = document.querySelector("form");
+            const form = document.getElementById("eq_form");
 
             // Hidden inputs for binding
             let dayOfWeekInput = document.createElement("input");
