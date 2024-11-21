@@ -62,7 +62,7 @@
                 @Html.DisplayFor(modelItem => item.EquipmentType.Name)
             </td>
             <td>
-                @if (User.IsInRole("Admin") || User.IsInRole("StudioAdmin") || User.IsInRole("Teacher"))
+                @if (User.IsInRole("Admin") || User.IsInRole("StudioAdmin") || (User.IsInRole("Teacher") &&  User.Claims.FirstOrDefault(c => c.Type == "AssignedStudioId")?.Value == item.StudioId.ToString()) )
                 {
                     <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
                     <p> | </p>

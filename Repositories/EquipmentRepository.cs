@@ -26,7 +26,15 @@ public class EquipmentRepository(ApplicationDbContext context)
             .Include(e => e.Studio)
             .FirstOrDefaultAsync(e => e.Id == id);
     }
-
+    
+    public Task<List<Equipment>> GetByStudioIdAsync(int studioId)
+    {
+        return context.Equipments
+            .Include(e => e.EquipmentType)
+            .Include(e => e.Studio)
+            .Where(e => e.StudioId == studioId)
+            .ToListAsync();
+    }
     public Task<int> CreateAsync(Equipment equipment)
     {
         context.Add(equipment);

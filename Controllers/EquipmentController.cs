@@ -22,6 +22,19 @@ namespace IIS.Controllers
         // GET: Equipment
         public async Task<IActionResult> Index()
         {
+            var currentUser = await studioRepository.GetUserWithStudioAsync(User.Identity.Name);
+            if (User.IsInRole("Student"))
+            {
+                int studioId = currentUser.AssignedStudioId.Value;
+                if (studioId != null)
+                {
+                    return View(await equipmentRepository.GetByStudioIdAsync(studioId));
+                }
+                else if (currentUser.AssignedStudioId == null)
+                {
+                    return View(new List<Equipment>());
+                }
+            }
             return View(await equipmentRepository.GetAllWithIncludesAsync());
         }
 
@@ -47,7 +60,11 @@ namespace IIS.Controllers
         {
             ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name");
             ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
-
+            var currentUser = await studioRepository.GetUserWithStudioAsync(User.Identity.Name);
+            if (!(User.IsInRole("Teacher") || User.IsInRole("Admin")))
+            {
+                return Forbid();
+            }
             return View();
         }
 
@@ -113,7 +130,11 @@ namespace IIS.Controllers
             {
                 return NotFound();
             }
-
+            var currentUser = await studioRepository.GetUserWithStudioAsync(User.Identity.Name);
+            if (!((currentUser?.AssignedStudioId == equipment.StudioId && User.IsInRole("Teacher")) || User.IsInRole("Admin")))
+            {
+                return Forbid();
+            }
             // Prepare the view model
             var model = new EquipmentViewModel
             {
@@ -222,7 +243,11 @@ namespace IIS.Controllers
             {
                 return NotFound();
             }
-
+            var currentUser = await studioRepository.GetUserWithStudioAsync(User.Identity.Name);
+            if (!((currentUser?.AssignedStudioId == equipment.StudioId && User.IsInRole("Teacher")) || User.IsInRole("Admin")))
+            {
+                return Forbid();
+            }
             return View(equipment);
         }
 
