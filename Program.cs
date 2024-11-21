@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using IIS.Data;
 using IIS.Models;
 using IIS.Repositories;
+using IIS.Services.Abstractions;
+using IIS.Services.Implementations;
 
 
 async Task CreateRoles(RoleManager<IdentityRole> roleManager)
@@ -51,7 +53,9 @@ builder.Services.AddScoped<EquipmentTypeRepository>();
 builder.Services.AddScoped<RentalDayIntervalRepository>();
 builder.Services.AddScoped<StudioRepository>();
 builder.Services.AddScoped<EquipmentRepository>();
+builder.Services.AddScoped<BorrowRepository>();
 builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<IBorrowService, BorrowService>();
 
 var app = builder.Build();
 

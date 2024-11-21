@@ -1,0 +1,105 @@
+@using IIS.Enums
+@model IEnumerable<IIS.ViewModels.ListBorrowViewModel>
+
+
+<script>
+    function sendData(action, id) {
+        fetch(`/Borrow/${action}/${id}`, {
+            method: 'POST'
+        })
+        .then(response => {
+            if (!response.ok) {         
+                throw new Error();
+            }
+            
+            return response; 
+        })
+        .then(() => {
+            alert(`Success: state updated`);    
+            location.reload();
+        })
+        .catch(() => {
+            alert(`Error: Something went wrong`);
+        });
+    }
+</script>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.EquipmentName)
+        </th>
+        @if (AnyRoleThanStudent())
+        {
+            <th>
+                @Html.DisplayNameFor(model => model.UserEmail)
+            </th>
+        }
+        <th>
+            @Html.DisplayNameFor(model => model.FromDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ToDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.State)
+        </th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.EquipmentName)
+            </td>
+            @if (AnyRoleThanStudent())
+            {
+                <td>
+                    <a asp-controller="User" asp-action="Details">@item.UserEmail</a>
+                </td>
+            }
+            <td>
+                @item.FromDate.ToShortDateString()
+            </td>
+            <td>
+                @item.ToDate.ToShortDateString()
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.State)
+            </td>
+            <td>
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> 
+                @if (@item.CanBeDeleted && item.State == BorrowState.Pending)
+                {
+                    @("|") <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                }
+                else if (AnyRoleThanStudent())
+                {
+                    if (item.State == BorrowState.Pending)
+                    {
+                        @("|") <button onclick="sendData('Accept', @(item.Id))">Accept</button>
+                        @("|") <button onclick="sendData('Reject', @(item.Id))">Reject</button>
+                    }
+                    if (item.State == BorrowState.Accepted && DateTime.Now >= item.FromDate && DateTime.Today <= item.ToDate)
+                    {
+                        @("|") <button onclick="sendData('Returned', @(item.Id))">Returned</button>
+                    }
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+@{
+    bool AnyRoleThanStudent() => User.IsInRole("Teacher") || User.IsInRole("StudioAdmin") || User.IsInRole("Admin");
+}

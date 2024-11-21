@@ -25,20 +25,20 @@
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.PurchaseDate)
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PurchaseDate)
+        <dd class="col-sm-10">
+            @Model.PurchaseDate.ToShortDateString()
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Image)
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Image)
+        <dd class="col-sm-10">
+            <img alt="Equipment Image" src="@Model.Image"/>
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.MaxRentalTime)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.MaxRentalTime)
+            @(Model.MaxRentalTime != null ? Model.MaxRentalTime?.Days + " days" : "")
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Studio)

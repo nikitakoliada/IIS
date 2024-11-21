@@ -12,7 +12,7 @@ public class EquipmentViewModel
 
     public string? Image { get; set; }
 
-    public TimeSpan? MaxRentalTime { get; set; }
+    public int? MaxRentalDays { get; set; }
 
     public int StudioId { get; set; }
 

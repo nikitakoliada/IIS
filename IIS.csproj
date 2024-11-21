@@ -23,4 +23,23 @@
         <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.6" />
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Views\Borrow\Create.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Borrow\Delete.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Borrow\Details.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Borrow\Edit.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Borrow\Index.cshtml" />
+      <_ContentIncludedByDefault Remove="Areas\Student\Views\Borrow\Create.cshtml" />
+      <_ContentIncludedByDefault Remove="Areas\Student\Views\Borrow\Delete.cshtml" />
+      <_ContentIncludedByDefault Remove="Areas\Student\Views\Borrow\Details.cshtml" />
+      <_ContentIncludedByDefault Remove="Areas\Student\Views\Borrow\Index.cshtml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Views\Borrow\Create.cshtml" />
+      <AdditionalFiles Include="Views\Borrow\Delete.cshtml" />
+      <AdditionalFiles Include="Views\Borrow\Details.cshtml" />
+      <AdditionalFiles Include="Views\Borrow\Index.cshtml" />
+    </ItemGroup>
+
 </Project>

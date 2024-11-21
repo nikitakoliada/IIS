@@ -83,7 +83,7 @@ namespace IIS.Controllers
                 ManufactureYear = model.ManufactureYear,
                 PurchaseDate = model.PurchaseDate,
                 Image = model.Image,
-                MaxRentalTime = model.MaxRentalTime,
+                MaxRentalTime = model.MaxRentalDays == null ? null : TimeSpan.FromDays(model.MaxRentalDays.Value),
                 StudioId = model.StudioId,
                 EquipmentTypeId = model.EquipmentTypeId,
                 RentalDayIntervals = model.RentalDayIntervals.Select(interval => new RentalDayInterval
@@ -122,7 +122,7 @@ namespace IIS.Controllers
                 ManufactureYear = equipment.ManufactureYear,
                 PurchaseDate = equipment.PurchaseDate,
                 Image = equipment.Image,
-                MaxRentalTime = equipment.MaxRentalTime,
+                MaxRentalDays = equipment.MaxRentalTime?.Days,
                 StudioId = equipment.StudioId,
                 EquipmentTypeId = equipment.EquipmentTypeId,
                 RentalDayIntervals = equipment.RentalDayIntervals.Select(interval => new RentalDayIntervalViewModel
@@ -165,7 +165,7 @@ namespace IIS.Controllers
                 equipment.ManufactureYear = model.ManufactureYear;
                 equipment.PurchaseDate = model.PurchaseDate;
                 equipment.Image = model.Image;
-                equipment.MaxRentalTime = model.MaxRentalTime;
+                equipment.MaxRentalTime = model.MaxRentalDays == null ? null : TimeSpan.FromDays(model.MaxRentalDays.Value);
                 equipment.StudioId = model.StudioId;
                 equipment.EquipmentTypeId = model.EquipmentTypeId;
 
