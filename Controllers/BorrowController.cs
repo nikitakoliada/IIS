@@ -71,19 +71,21 @@ namespace IIS.Controllers
         {
             var correspondingEquipment = await equipmentRepository.GetByIdWithIncludesAsync(id);
             var user = await userRepository.GetByIdAsync(GetUserId());
-         
+
             if (correspondingEquipment == null)
             {
                 ModelState.AddModelError("",
                     $"Equipment you are trying to borrow does not exist");
                 return NotFound();
             }
-            
+
             if (correspondingEquipment.UsersForbiddenToBorrow.Any(x => x.Id == GetUserId()) ||
                 user.AssignedStudioId == null || user.AssignedStudioId != correspondingEquipment.StudioId)
             {
                 return Forbid();
             }
+
+            ViewBag["RentalDays"] = correspondingEquipment.GetRentalDayOfWeeks();
             ViewData["EquipmentId"] = id;
             return View();
         }
@@ -95,28 +97,40 @@ namespace IIS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateBorrowViewModel borrow)
         {
+            var correspondingEquipment = await equipmentRepository.GetByIdWithIncludesAsync(borrow.EquipmentId);
+            
+            if (correspondingEquipment == null)
+            {
+                ModelState.AddModelError("",
+                    $"Equipment you are trying to borrow does not exist");
+                return await ReturnView(borrow);
+            }
+            
             Task<IActionResult> ReturnView(CreateBorrowViewModel borrow)
             {
+                ViewBag["RentalDays"] = correspondingEquipment.GetRentalDayOfWeeks();
                 ViewData["EquipmentId"] = borrow.EquipmentId;
                 return Task.FromResult<IActionResult>(View(borrow));
             }
-
+            
             if (ModelState.IsValid)
             {
-                var correspondingEquipment = await equipmentRepository.GetByIdWithIncludesAsync(borrow.EquipmentId);
                 var user = await userRepository.GetByIdAsync(GetUserId());
-                if (correspondingEquipment == null)
-                {
-                    ModelState.AddModelError("",
-                        $"Equipment you are trying to borrow does not exist");
-                    return await ReturnView(borrow);
-                }
 
                 if (correspondingEquipment.UsersForbiddenToBorrow.Any(x => x.Id == GetUserId()) ||
                     user.AssignedStudioId == null || user.AssignedStudioId != correspondingEquipment.StudioId)
                 {
                     ModelState.AddModelError("",
                         $"You are not allowed to borrow this equipment");
+                    return await ReturnView(borrow);
+                }
+
+                if (correspondingEquipment.RentalDayIntervals.All(x => borrow.FromDate.DayOfWeek != x.DayOfWeek) ||
+                    correspondingEquipment.RentalDayIntervals.All(x => borrow.ToDate.DayOfWeek != x.DayOfWeek))
+                {
+                    ModelState.AddModelError("",
+                        "You are only allowed to return or take equipment on " +
+                        $"{string.Join(',', correspondingEquipment.GetRentalDayOfWeeks())}");
                     return await ReturnView(borrow);
                 }
 
