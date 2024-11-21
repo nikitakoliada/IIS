@@ -5,9 +5,6 @@ using IIS.Models;
 using IIS.Repositories;
 
 
-// sooooo basically use this if you want some controller
-// functions only be used by specific role [Authorize(Roles = "Teacher")]
-// and in services add _userManager.AddToRoleAsync(user, role) for new user 
 async Task CreateRoles(RoleManager<IdentityRole> roleManager)
 {
     string[] roleNames = { "Admin", "StudioAdmin", "Teacher", "Student" };
