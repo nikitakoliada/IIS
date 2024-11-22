@@ -109,9 +109,7 @@ namespace IIS.Controllers
                 };
                 await rentalDayIntervalRepository.CreateAsync(intervalModel);
             }
-
-            await equipmentRepository.UpdateAsync(equipment); // TODO: Not sure
-
+            
             return RedirectToAction(nameof(Index));
         }
 
