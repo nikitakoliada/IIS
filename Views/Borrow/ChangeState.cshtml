@@ -1,0 +1,54 @@
+@model IIS.Models.Borrow
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h1>Change borrow state</h1>
+
+<div>
+    <h4>Borrow</h4>
+    <hr/>
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FromDate)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FromDate)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.ToDate)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.ToDate)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.State)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.State)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.User)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.User.Id)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Equipment)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Equipment.Id)
+        </dd>
+    </dl>
+
+    <form asp-action="ChangeState">
+        <input type="hidden" asp-for="Id"/>
+        <div class="form-group">
+            <label asp-for="State" class="control-label"></label>
+            <select asp-for="State" class="form-control" asp-items="ViewBag.EquipmentTypeId"></select>
+        </div>
+        <input type="submit" value="Delete" class="btn btn-danger"/> |
+        <a asp-action="Requests">Back to List</a>
+    </form>
+</div>

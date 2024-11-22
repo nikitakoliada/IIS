@@ -14,6 +14,9 @@
             @Html.DisplayNameFor(model => model.EquipmentName)
         </th>
         <th>
+            @Html.DisplayNameFor(model => model.UserEmail)
+        </th>
+        <th>
             @Html.DisplayNameFor(model => model.FromDate)
         </th>
         <th>
@@ -32,6 +35,10 @@
             <td>
                 @Html.DisplayFor(modelItem => item.EquipmentName)
             </td>
+
+            <td>
+                <a asp-controller="User" asp-action="Details">@item.UserEmail</a>
+            </td>
             <td>
                 @item.FromDate.ToShortDateString()
             </td>
@@ -42,10 +49,9 @@
                 @Html.DisplayFor(modelItem => item.State)
             </td>
             <td>
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> 
-                @if (item.CanBeDeleted && item.State == BorrowState.Pending)
-                {
-                    @("|") <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a>
+                @("|")
+                <a asp-action="ChangeState">Accept</a>
                 }
             </td>
         </tr>

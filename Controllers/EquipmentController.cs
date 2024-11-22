@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -37,6 +38,7 @@ namespace IIS.Controllers
             }
             return View(await equipmentRepository.GetAllWithIncludesAsync());
         }
+        
 
         // GET: Equipment/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -60,7 +62,6 @@ namespace IIS.Controllers
         {
             ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name");
             ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
-            var currentUser = await studioRepository.GetUserWithStudioAsync(User.Identity.Name);
             if (!(User.IsInRole("Teacher") || User.IsInRole("Admin")))
             {
                 return Forbid();
@@ -103,6 +104,7 @@ namespace IIS.Controllers
                 MaxRentalTime = model.MaxRentalDays == null ? null : TimeSpan.FromDays(model.MaxRentalDays.Value),
                 StudioId = model.StudioId,
                 EquipmentTypeId = model.EquipmentTypeId,
+                OwnerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value!,
                 RentalDayIntervals = model.RentalDayIntervals.Select(interval => new RentalDayInterval
                 {
                     DayOfWeek = interval.DayOfWeek,
