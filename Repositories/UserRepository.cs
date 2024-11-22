@@ -44,13 +44,6 @@ public class UserRepository(ApplicationDbContext context)
         return context.Users.AnyAsync(u => u.Id == id);
     }
 
-    public Task<int> CreateAsync(User user)
-    {
-        context.Add(user);
-
-        return context.SaveChangesAsync();
-    }
-
     public Task<int> UpdateAsync(User user)
     {
         context.Update(user);

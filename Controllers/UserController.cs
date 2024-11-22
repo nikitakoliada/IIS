@@ -22,13 +22,15 @@ namespace IIS.Controllers
         [Authorize(Roles = "Admin,StudioAdmin,Teacher")]
         public async Task<IActionResult> Index(string searchString)
         {
-            List<User> users;
             var currentUser = await userManager.GetUserAsync(HttpContext.User);
             var roles = userManager.GetRolesAsync(currentUser!).Result;
+
+            List<User> users;
 
             if (roles.Contains("Admin"))
             {
                 users = await userRepository.GetAllWithIncludesAsync();
+                ViewData["IsAdmin"] = true;
             }
             else if (roles.Contains("StudioAdmin"))
             {
@@ -41,17 +43,19 @@ namespace IIS.Controllers
 
             if (!string.IsNullOrEmpty(searchString))
             {
-                users = [..users.Where(u => 
+                users = [..users.Where(u =>
                     u.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))];
             }
-            
+
             return View(users);
         }
 
         // GET: User/Details/5
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Details(string? id)
         {
+            var currentUser = (await userManager.GetUserAsync(HttpContext.User))!;
+
             if (id == null)
             {
                 return NotFound();
@@ -63,11 +67,16 @@ namespace IIS.Controllers
                 return NotFound();
             }
 
+            if (!CanLoggedInUserManageGivenUser(currentUser, user))
+            {
+                return Forbid();
+            }
+
             return View(user);
         }
 
         // GET: User/Edit/5
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,StudioAdmin,Teacher")]
         public async Task<IActionResult> Edit(string? id)
         {
             if (id == null)
@@ -80,14 +89,35 @@ namespace IIS.Controllers
             {
                 return NotFound();
             }
-            
-            ViewData["AssignedStudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
-            if (await IsCurrentUserAdmin())
+
+            var currentUser = (await userManager.GetUserAsync(HttpContext.User))!;
+            var currentUserRoles = userManager.GetRolesAsync(currentUser).Result;
+
+            if (!CanLoggedInUserManageGivenUser(currentUser, user))
             {
-                ViewData["IsStudioAdmin"] = IsUserStudioAdmin((await userRepository.GetByIdAsync(id))!);
+                return Forbid();
             }
-            
-            
+
+            var userRoles = userManager.GetRolesAsync(user).Result;
+
+            if (currentUserRoles.Contains("Admin"))
+            {
+                ViewData["IsAdminEditing"] = true;
+                ViewData["IsStudioAdmin"] = userRoles.Contains("StudioAdmin");
+                ViewData["IsTeacher"] = userRoles.Contains("Teacher");
+                ViewData["IsStudent"] = userRoles.Contains("Student");
+                ViewData["AssignedStudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
+            }
+            else if (currentUserRoles.Contains("StudioAdmin"))
+            {
+                ViewData["IsTeacher"] = userRoles.Contains("Teacher");
+                ViewData["IsAssignedToMyStudio"] = user.AssignedStudioId == currentUser.AssignedStudioId;
+            }
+            else if (currentUserRoles.Contains("Teacher"))
+            {
+                ViewData["IsStudent"] = userRoles.Contains("Student");
+            }
+
             return View(user);
         }
 
@@ -96,7 +126,7 @@ namespace IIS.Controllers
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(string id,
-            [Bind("Id,Name,Address,BirthDate,AssignedStudioId,IsAdmin,IsStudioAdmin")] UserEditViewModel user)
+            [Bind("Id,Name,Address,BirthDate,AssignedStudioId,IsAssignedToMyStudio,IsAdmin,IsStudioAdmin,IsTeacher,IsStudent")] UserEditViewModel user)
         {
             if (id != user.Id)
             {
@@ -105,32 +135,27 @@ namespace IIS.Controllers
 
             if (!ModelState.IsValid)
             {
-                ViewData["AssignedStudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
-                if (await IsCurrentUserAdmin())
-                {
-                    ViewData["IsStudioAdmin"] = IsUserStudioAdmin((await userRepository.GetByIdAsync(id))!);
-                }
-                
-                return View(await userRepository.GetByIdAsync(user.Id));
+                return RedirectToAction(nameof(Edit), new { id });
             }
 
-            User? foundUser;
+            var foundUser = await userRepository.GetByIdAsync(id);
 
-            try
+            if (foundUser == null)
             {
-                foundUser = await UpdateFromEditViewModel(user);
+                return NotFound();
             }
-            catch (DbUpdateConcurrencyException) // TODO: check if this condition is needed
+
+            var currentUser = (await userManager.GetUserAsync(HttpContext.User))!;
+            var currentUserRoles = userManager.GetRolesAsync(currentUser).Result;
+
+            // !ADMIN: cannot set assigned studio for user
+            if (!currentUserRoles.Contains("Admin"))
             {
-                if (!await userRepository.ExistsAsync(user.Id))
-                {
-                    return NotFound();
-                }
-                
-                throw;
+                user.AssignedStudioId = null;
             }
-            
-            if (await IsCurrentUserAdmin())
+
+            // ADMIN: make StudioAdmin
+            if (currentUserRoles.Contains("Admin"))
             {
                 if (user.IsStudioAdmin.HasValue && user.IsStudioAdmin.Value)
                 {
@@ -141,7 +166,66 @@ namespace IIS.Controllers
                     await userManager.RemoveFromRoleAsync(foundUser, "StudioAdmin");
                 }
             }
-            
+
+            // ADMIN & STUDIOADMIN: make teachers
+            if (currentUserRoles.Contains("StudioAdmin") || currentUserRoles.Contains("Admin"))
+            {
+                if (user.IsTeacher.HasValue && user.IsTeacher.Value)
+                {
+                    await userManager.AddToRoleAsync(foundUser, "Teacher");
+                }
+                else
+                {
+                    await userManager.RemoveFromRoleAsync(foundUser, "Teacher");
+                }
+            }
+
+            // STUDIOADMIN: assign to ones studio
+            if (currentUserRoles.Contains("StudioAdmin") && !currentUserRoles.Contains("Admin"))
+            {
+                var userModel = (await userRepository.GetByIdAsync(user.Id))!;
+                if (userModel.AssignedStudioId != null || userModel.AssignedStudioId != currentUser.AssignedStudioId)
+                {
+                    return NotFound();
+                }
+
+                if (user.IsAssignedToMyStudio.HasValue && user.IsAssignedToMyStudio.Value)
+                {
+                    userModel.AssignedStudioId = currentUser.AssignedStudioId;
+                }
+                else
+                {
+                    userModel.AssignedStudio = null;
+                }
+            }
+
+            // ADMIN & TEACHER: make students
+            if (currentUserRoles.Contains("Teacher") || currentUserRoles.Contains("Admin"))
+            {
+                if (user.IsStudent.HasValue && user.IsStudent.Value)
+                {
+                    await userManager.AddToRoleAsync(foundUser, "Student");
+                }
+                else
+                {
+                    await userManager.RemoveFromRoleAsync(foundUser, "Student");
+                }
+            }
+
+            try
+            {
+                foundUser = await UpdateFromEditViewModel(user);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await userRepository.ExistsAsync(user.Id))
+                {
+                    return NotFound();
+                }
+
+                throw;
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -174,9 +258,9 @@ namespace IIS.Controllers
             {
                 return NotFound();
             }
-            
+
             await userRepository.RemoveAsync(user);
-            
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -187,30 +271,42 @@ namespace IIS.Controllers
             {
                 return null;
             }
-            
+
             user.Name = viewModel.Name;
             user.Address = viewModel.Address;
             user.BirthDate = viewModel.BirthDate;
-            user.AssignedStudioId = viewModel.AssignedStudioId;
-            
-            Console.WriteLine("1");
-            
+            if (viewModel.AssignedStudioId == 0)
+            {
+                user.AssignedStudioId = null;
+            }
+            else if (viewModel.AssignedStudioId != null && await studioRepository.GetByIdAsync(viewModel.AssignedStudioId.Value) != null)
+            {
+                user.AssignedStudioId = viewModel.AssignedStudioId;
+            }
+
             await userRepository.UpdateAsync(user);
-            
-            Console.WriteLine("2");
 
             return user;
         }
-        
-        private async Task<bool> IsCurrentUserAdmin()
+
+        private bool CanLoggedInUserManageGivenUser(User loggedInUser, User givenUser)
         {
-            return userManager.GetRolesAsync((
-                await userManager.GetUserAsync(HttpContext.User))!).Result.Contains("Admin");
-        }
-        
-        private bool IsUserStudioAdmin(User user)
-        {
-            return userManager.GetRolesAsync(user).Result.Contains("StudioAdmin");
+            var loggedInUserRoles = userManager.GetRolesAsync(loggedInUser).Result;
+
+            if (loggedInUserRoles.Contains("Admin"))
+            {
+                return true;
+            }
+            else if (loggedInUserRoles.Contains("StudioAdmin"))
+            {
+                return givenUser.AssignedStudio == loggedInUser.AssignedStudio || givenUser.AssignedStudio == null;
+            }
+            else if (loggedInUserRoles.Contains("Teacher"))
+            {
+                return givenUser.AssignedStudio == loggedInUser.AssignedStudio;
+            }
+
+            return loggedInUser == givenUser;
         }
     }
 }
