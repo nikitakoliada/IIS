@@ -80,20 +80,7 @@ namespace IIS.Controllers
                 ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
                 return View(model);
             }
-            Console.WriteLine(model.RentalDayIntervals.Count);
-            foreach (var interval in model.RentalDayIntervals)
-            {
-                var intervalModel = new RentalDayInterval
-                {
-                    DayOfWeek = interval.DayOfWeek,
-                    StartTime = interval.StartTime,
-                    EndTime = interval.EndTime,
-                    Place = interval.Place,
-                    EquipmentId = model.Id
-                };
-                await rentalDayIntervalRepository.CreateAsync(intervalModel);
-            }
-
+            
             // Map the view model to the main Equipment model
             var equipment = new Equipment
             {
@@ -105,17 +92,25 @@ namespace IIS.Controllers
                 StudioId = model.StudioId,
                 EquipmentTypeId = model.EquipmentTypeId,
                 OwnerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value!,
-                RentalDayIntervals = model.RentalDayIntervals.Select(interval => new RentalDayInterval
+            };
+
+            await equipmentRepository.CreateAsync(equipment);
+            
+            Console.WriteLine(model.RentalDayIntervals.Count);
+            foreach (var interval in model.RentalDayIntervals)
+            {
+                var intervalModel = new RentalDayInterval
                 {
                     DayOfWeek = interval.DayOfWeek,
                     StartTime = interval.StartTime,
                     EndTime = interval.EndTime,
                     Place = interval.Place,
-                    EquipmentId = model.Id
-                }).ToList()
-            };
+                    EquipmentId = equipment.Id
+                };
+                await rentalDayIntervalRepository.CreateAsync(intervalModel);
+            }
 
-            await equipmentRepository.CreateAsync(equipment);
+            await equipmentRepository.UpdateAsync(equipment); // TODO: Not sure
 
             return RedirectToAction(nameof(Index));
         }
