@@ -13,7 +13,7 @@
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
-            @if (ViewBag.IsAdminEditing == true)
+            @if (ViewData["IsAdminEditing"] != null && (bool)ViewData["IsAdminEditing"])
             {
                 <div class="form-group">
                     <label asp-for="Name" class="control-label"></label>
@@ -35,14 +35,22 @@
                     <input asp-for="BirthDate" class="form-control"/>
                     <span asp-validation-for="BirthDate" class="text-danger"></span>
                 </div>
+                <div class="form-group">
+                    <label asp-for="AssignedStudioId" class="control-label"></label>
+                    <select asp-for="AssignedStudioId" class="form-control" asp-items="ViewBag.AssignedStudioId">
+                        <option value="0">None</option>
+                    </select>
+                    <span asp-validation-for="AssignedStudioId" class="text-danger"></span>
+                </div>
             }
-            @if(ViewData["IsAssignedToMyStudio"] != null)
+            else if (ViewData["IsAssignedToMyStudio"] != null && (bool)ViewData["IsAssignedToMyStudio"])
             {
                 <div class="form-group">
                     <label for="IsAssignedToMyStudio" class="form-check-label">Is Assigned To My Studio</label>
-                    <input type="checkbox" name="IsAssignedToMyStudio" id="IsAssignedToMyStudio" class="form-check-input" value="true" checked="@ViewBag.IsAssignedToMyStudio" />
+                    <input type="checkbox" name="IsAssignedToMyStudio" id="IsAssignedToMyStudio" class="form-check-input" value="true" checked="@ViewBag.IsAssignedToMyStudio"/>
                 </div>
             }
+
             @if(ViewData["IsStudioAdmin"] != null)
             {
                 <div class="form-group">
@@ -55,6 +63,13 @@
                 <div class="form-group">
                     <label for="IsTeacher" class="form-check-label">Is Teacher</label>
                     <input type="checkbox" name="IsTeacher" id="IsTeacher" class="form-check-input" value="true" checked="@ViewBag.IsTeacher" />
+                </div>
+            }
+            @if (ViewData["IsStudent"] != null)
+            {
+                <div class="form-group">
+                    <label for="IsStudent" class="form-check-label">Can Borrow Items</label>
+                    <input type="checkbox" name="IsStudent" id="IsStudent" class="form-check-input" value="true" checked="@ViewBag.IsStudent" />
                 </div>
             }
 

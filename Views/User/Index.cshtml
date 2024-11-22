@@ -15,12 +15,9 @@
             <th>
                 @Html.DisplayNameFor(model => model.UserName)
             </th>
-            @if (ViewData["ShowStudioFilter"] != null && (bool)ViewData["ShowStudioFilter"])
-            { 
-                <th>
-                    @Html.DisplayNameFor(model => model.AssignedStudio)
-                </th>   
-            }
+            <th>
+                @Html.DisplayNameFor(model => model.AssignedStudio)
+            </th>   
             <th>
                 @Html.DisplayNameFor(model => model.BirthDate)
             </th>
@@ -41,12 +38,9 @@
             <td>
                 @Html.DisplayFor(modelItem => item.UserName)
             </td>
-            @if (ViewData["ShowStudioFilter"] != null && (bool)ViewData["ShowStudioFilter"])
-            { 
-                <td>
-                    @Html.DisplayFor(modelItem => item.AssignedStudio.Name)
-                </td>
-            }
+            <td>
+                @Html.DisplayFor(modelItem => item.AssignedStudio.Name)
+            </td>
             <td>
                 @Html.DisplayFor(modelItem => item.BirthDate)
             </td>
