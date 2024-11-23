@@ -43,10 +43,5 @@ public class StudioRepository(ApplicationDbContext context)
         return context.SaveChangesAsync();
     }
     
-    public async Task<User?> GetUserWithStudioAsync(string username)
-    {
-        return await context.Users
-            .Include(u => u.AssignedStudio)
-            .FirstOrDefaultAsync(u => u.UserName == username);
-    }
+    
 }

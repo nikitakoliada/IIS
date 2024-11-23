@@ -17,13 +17,14 @@ namespace IIS.Controllers
         EquipmentTypeRepository equipmentTypeRepository,
         StudioRepository studioRepository,
         EquipmentRepository equipmentRepository,
+        UserRepository userRepository,
         RentalDayIntervalRepository rentalDayIntervalRepository)
         : Controller
     {
         // GET: Equipment
         public async Task<IActionResult> Index()
         {
-            var currentUser = await studioRepository.GetUserWithStudioAsync(User.Identity.Name);
+            var currentUser = await userRepository.GetUserWithStudioAsync(User.Identity.Name);
             if (User.IsInRole("Student") || User.IsInRole("Teacher"))
             {
                 int studioId = currentUser.AssignedStudioId.Value;
@@ -139,7 +140,7 @@ namespace IIS.Controllers
             {
                 return NotFound();
             }
-            var currentUser = await studioRepository.GetUserWithStudioAsync(User.Identity.Name);
+            var currentUser = await userRepository.GetUserWithStudioAsync(User.Identity.Name);
             if (!((currentUser?.AssignedStudioId == equipment.StudioId && User.IsInRole("Teacher")) || User.IsInRole("Admin")))
             {
                 return Forbid();
@@ -252,7 +253,7 @@ namespace IIS.Controllers
             {
                 return NotFound();
             }
-            var currentUser = await studioRepository.GetUserWithStudioAsync(User.Identity.Name);
+            var currentUser = await userRepository.GetUserWithStudioAsync(User.Identity.Name);
             if (!((currentUser?.AssignedStudioId == equipment.StudioId && User.IsInRole("Teacher")) || User.IsInRole("Admin")))
             {
                 return Forbid();
