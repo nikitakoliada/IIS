@@ -16,6 +16,12 @@ public class StudioRepository(ApplicationDbContext context)
         return context.Studios.FirstOrDefaultAsync(s => s.Id == id);
     }
     
+    public Task<Studio?> GetByUserIdAsync(string userId)
+    {
+        return context.Studios.FirstOrDefaultAsync(s => s.UsersAssigned.Any(u => u.Id == userId));
+    }
+
+    
     public Task<int> CreateAsync(Studio studio)
     {
         context.Add(studio);

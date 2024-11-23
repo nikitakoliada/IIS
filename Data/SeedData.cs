@@ -73,7 +73,9 @@ public static class SeedData
                 NormalizedUserName = "JOHNDOE@EXAMPLE.COM",
                 Address = "123 Main St",
                 BirthDate = DateTime.Today.AddYears(-20),
-                AssignedStudioId = teacherStudioId
+                AssignedStudioId = teacherStudioId,
+                EmailConfirmed = true,
+
             };
 
             var jane = new User
@@ -85,11 +87,27 @@ public static class SeedData
                 NormalizedUserName = "JANEDOE@EXAMPLE.COM",
                 Address = "456 Main St",
                 BirthDate = DateTime.Today.AddYears(-22), 
+                EmailConfirmed = true,
+            };
+            
+            var studioAdmin = new User
+            {
+                Name = "Jane Doe",
+                Email = "janedoe@example.com",
+                UserName = "janedoe@example.com",
+                NormalizedEmail = "JANEDOE@EXAMPLE.COM",
+                NormalizedUserName = "JANEDOE@EXAMPLE.COM",
+                Address = "456 Main St",
+                BirthDate = DateTime.Today.AddYears(-22), 
+                EmailConfirmed = true,
             };
 
-            await userManager.CreateAsync(john, "Password123!"); // Assign a password for John
+            john.PasswordHash = new PasswordHasher<User>().HashPassword(john, "qwerty678");
+            jane.PasswordHash = new PasswordHasher<User>().HashPassword(jane, "qwerty678");
+
+            await userManager.CreateAsync(john); // Assign a password for John
             await userManager.AddToRoleAsync(john, "Teacher"); // Assign Teacher role
-            await userManager.CreateAsync(jane, "Password123!"); // Assign a password for Jane
+            await userManager.CreateAsync(jane); // Assign a password for Jane
             
             await context.SaveChangesAsync();
         }

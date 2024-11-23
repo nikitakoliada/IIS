@@ -24,7 +24,7 @@ namespace IIS.Controllers
         public async Task<IActionResult> Index()
         {
             var currentUser = await studioRepository.GetUserWithStudioAsync(User.Identity.Name);
-            if (User.IsInRole("Student"))
+            if (User.IsInRole("Student") || User.IsInRole("Teacher"))
             {
                 int studioId = currentUser.AssignedStudioId.Value;
                 if (studioId != null)
@@ -60,8 +60,22 @@ namespace IIS.Controllers
         // GET: Equipment/Create
         public async Task<IActionResult> Create()
         {
+            if(User.IsInRole("Student") || User.IsInRole("StudioAdmin"))
+            {
+                return Forbid();
+            }
             ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name");
-            ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
+            if (User.IsInRole("Teacher"))
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value!; 
+                ViewData["StudioId"] = new SelectList( new List<Studio>([ await studioRepository.GetByUserIdAsync(userId)]), "Id", "Name");
+            }
+            else
+            {
+                ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
+
+            }
+
             if (!(User.IsInRole("Teacher") || User.IsInRole("Admin")))
             {
                 return Forbid();
