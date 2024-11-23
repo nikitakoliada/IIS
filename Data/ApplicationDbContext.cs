@@ -54,6 +54,12 @@ public class ApplicationDbContext : IdentityDbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Equipment>()
+            .HasOne(e => e.Owner)
+            .WithMany()
+            .HasForeignKey(x => x.OwnerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Equipment>()
             .HasMany(e => e.UsersForbiddenToBorrow)
             .WithMany(u => u.RestrictedEquipment);
 

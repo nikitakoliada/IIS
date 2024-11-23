@@ -18,12 +18,13 @@ public class BorrowService : IBorrowService
     public async Task<Interval> FindClosestFreeInterval(int equipmentId, DateTime date)
     {
         var startDate = DateTime.Now;
-        
-        var borrows = (await borrowRepository.GetAllWithIncludesAsync()).Where(x => x.ToDate > startDate).OrderBy(x => x.FromDate);
-        
+
+        var borrows = (await borrowRepository.GetAllWithIncludesAsync())
+            .Where(x => x.State != BorrowState.Rejected && x.ToDate > startDate).OrderBy(x => x.FromDate);
+
         var freeIntervals = new List<Interval>();
-        
-        foreach(var borrow in borrows)
+
+        foreach (var borrow in borrows)
         {
             if (borrow.FromDate < startDate)
             {
@@ -32,7 +33,7 @@ public class BorrowService : IBorrowService
             }
 
             var freeIntervalEnd = borrow.FromDate - TimeSpan.FromDays(1);
-            
+
             if ((freeIntervalEnd - startDate).Days >= 0)
             {
                 freeIntervals.Add((startDate, freeIntervalEnd));
@@ -67,8 +68,9 @@ public class BorrowService : IBorrowService
 
     public async Task<bool> IsEquipmentAvailable(int equipmentId, Interval interval)
     {
-        return !(await borrowRepository.GetByEquipmentId(equipmentId)).Any(x =>
-            (x.FromDate <= interval.From && interval.From <= x.ToDate) ||
-            (x.FromDate <= interval.To && interval.To <= x.ToDate));
+        return !(await borrowRepository.GetByEquipmentId(equipmentId)).Where(x => x.State != BorrowState.Rejected).Any(
+            x =>
+                (x.FromDate <= interval.From && interval.From <= x.ToDate) ||
+                (x.FromDate <= interval.To && interval.To <= x.ToDate));
     }
 }

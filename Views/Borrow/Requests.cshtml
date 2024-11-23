@@ -1,4 +1,5 @@
 @using IIS.Enums
+@using IIS.Extensions
 @model IEnumerable<IIS.ViewModels.ListBorrowViewModel>
 
 @{
@@ -12,6 +13,9 @@
     <tr>
         <th>
             @Html.DisplayNameFor(model => model.EquipmentName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.UserEmail)
         </th>
         <th>
             @Html.DisplayNameFor(model => model.FromDate)
@@ -32,6 +36,10 @@
             <td>
                 @Html.DisplayFor(modelItem => item.EquipmentName)
             </td>
+
+            <td>
+                <a asp-controller="User" asp-action="Details">@item.UserEmail</a>
+            </td>
             <td>
                 @item.FromDate.ToShortDateString()
             </td>
@@ -42,10 +50,11 @@
                 @Html.DisplayFor(modelItem => item.State)
             </td>
             <td>
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> 
-                @if (item.CanBeDeleted && item.State == BorrowState.Pending)
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a>
+                @if (@item.State.NextPossibleStates().Count > 0)
                 {
-                    @("|") <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    @("|")
+                    <a asp-action="ChangeState" asp-route-id="@item.Id">Change state</a>
                 }
             </td>
         </tr>

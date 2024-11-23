@@ -27,6 +27,12 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Borrow" asp-action="Index">Borrows</a>
                         </li>
+                        @if (User.IsInRole("Teacher") || User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Borrow" asp-action="Requests">Borrow Requests</a>
+                            </li>
+                        }
                         @if (User.IsInRole("Admin") || User.IsInRole("StudioAdmin") || User.IsInRole("Teacher"))
                         {
                             <li class="nav-item">

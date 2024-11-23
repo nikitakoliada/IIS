@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -37,6 +38,7 @@ namespace IIS.Controllers
             }
             return View(await equipmentRepository.GetAllWithIncludesAsync());
         }
+        
 
         // GET: Equipment/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -60,7 +62,6 @@ namespace IIS.Controllers
         {
             ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name");
             ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
-            var currentUser = await studioRepository.GetUserWithStudioAsync(User.Identity.Name);
             if (!(User.IsInRole("Teacher") || User.IsInRole("Admin")))
             {
                 return Forbid();
@@ -79,20 +80,7 @@ namespace IIS.Controllers
                 ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
                 return View(model);
             }
-            Console.WriteLine(model.RentalDayIntervals.Count);
-            foreach (var interval in model.RentalDayIntervals)
-            {
-                var intervalModel = new RentalDayInterval
-                {
-                    DayOfWeek = interval.DayOfWeek,
-                    StartTime = interval.StartTime,
-                    EndTime = interval.EndTime,
-                    Place = interval.Place,
-                    EquipmentId = model.Id
-                };
-                await rentalDayIntervalRepository.CreateAsync(intervalModel);
-            }
-
+            
             // Map the view model to the main Equipment model
             var equipment = new Equipment
             {
@@ -103,18 +91,25 @@ namespace IIS.Controllers
                 MaxRentalTime = model.MaxRentalDays == null ? null : TimeSpan.FromDays(model.MaxRentalDays.Value),
                 StudioId = model.StudioId,
                 EquipmentTypeId = model.EquipmentTypeId,
-                RentalDayIntervals = model.RentalDayIntervals.Select(interval => new RentalDayInterval
+                OwnerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value!,
+            };
+
+            await equipmentRepository.CreateAsync(equipment);
+            
+            Console.WriteLine(model.RentalDayIntervals.Count);
+            foreach (var interval in model.RentalDayIntervals)
+            {
+                var intervalModel = new RentalDayInterval
                 {
                     DayOfWeek = interval.DayOfWeek,
                     StartTime = interval.StartTime,
                     EndTime = interval.EndTime,
                     Place = interval.Place,
-                    EquipmentId = model.Id
-                }).ToList()
-            };
-
-            await equipmentRepository.CreateAsync(equipment);
-
+                    EquipmentId = equipment.Id
+                };
+                await rentalDayIntervalRepository.CreateAsync(intervalModel);
+            }
+            
             return RedirectToAction(nameof(Index));
         }
 
