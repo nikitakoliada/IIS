@@ -25,6 +25,7 @@ public class EquipmentRepository(ApplicationDbContext context)
             .Include(e => e.EquipmentType)
             .Include(e => e.Studio)
             .Include(e => e.RentalDayIntervals)
+            .Include(e => e.Owner)
             .FirstOrDefaultAsync(e => e.Id == id);
     }
     

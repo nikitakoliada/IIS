@@ -1,7 +1,7 @@
 @model IIS.Models.Borrow
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Change borrow state";
 }
 
 <h1>Change borrow state</h1>
@@ -32,7 +32,7 @@
             @Html.DisplayNameFor(model => model.User)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.User.Id)
+            @Html.DisplayFor(model => model.User.Email)
         </dd>
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Equipment)
@@ -42,13 +42,13 @@
         </dd>
     </dl>
 
-    <form asp-action="ChangeState">
+    <form asp-action="ChangeState" method="post">
         <input type="hidden" asp-for="Id"/>
         <div class="form-group">
-            <label asp-for="State" class="control-label"></label>
-            <select asp-for="State" class="form-control" asp-items="ViewBag.EquipmentTypeId"></select>
+            <label for="State" class="control-label"></label>
+            <select id="State" name="State" class="form-control" asp-items="ViewBag.NextPossibleStates"></select>
         </div>
-        <input type="submit" value="Delete" class="btn btn-danger"/> |
+        <input type="submit" value="Change State" class="btn btn-danger"/> |
         <a asp-action="Requests">Back to List</a>
     </form>
 </div>

@@ -1,4 +1,5 @@
 @using IIS.Enums
+@using IIS.Extensions
 @model IEnumerable<IIS.ViewModels.ListBorrowViewModel>
 
 @{
@@ -50,8 +51,10 @@
             </td>
             <td>
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a>
-                @("|")
-                <a asp-action="ChangeState">Accept</a>
+                @if (@item.State.NextPossibleStates().Count > 0)
+                {
+                    @("|")
+                    <a asp-action="ChangeState" asp-route-id="@item.Id">Change state</a>
                 }
             </td>
         </tr>

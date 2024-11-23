@@ -50,19 +50,21 @@ namespace IIS.Controllers
             return View(borrows.Select(x => ListBorrowViewModel.FromBorrowModel(x, GetUserId())).ToList());
         }
 
+        [Authorize(Roles = "Teacher, Admin")]
         [ActionName("Requests")]
         public async Task<IActionResult> BorrowRequests()
         {
             List<Borrow> borrows;
 
-            if (!User.IsInRole("Teacher"))
+            if (User.IsInRole("Teacher"))
             {
-                return Forbid();
+                borrows = await borrowRepository.GetByOwnerId(GetUserId());
             }
-
-            var user = await userRepository.GetByIdAsync(GetUserId());
-            borrows = await borrowRepository.GetByOwnerId(GetUserId());
-
+            else
+            {
+                borrows = await borrowRepository.GetAllWithIncludesAsync();
+            }
+            
             return View(borrows.Select(x => ListBorrowViewModel.FromBorrowModel(x, GetUserId())).ToList());
         }
 
@@ -105,7 +107,7 @@ namespace IIS.Controllers
                 return Forbid();
             }
 
-            ViewBag["RentalDays"] = correspondingEquipment.GetRentalDayOfWeeks();
+            ViewData["RentalDays"] = correspondingEquipment.GetRentalDayOfWeeks().Select(x => x.ToString());
             ViewData["EquipmentId"] = id;
             return View();
         }
@@ -128,7 +130,7 @@ namespace IIS.Controllers
 
             Task<IActionResult> ReturnView(CreateBorrowViewModel borrow)
             {
-                ViewBag["RentalDays"] = correspondingEquipment.GetRentalDayOfWeeks();
+                ViewData["RentalDays"] = correspondingEquipment.GetRentalDayOfWeeks().Select(x => x.ToString());
                 ViewData["EquipmentId"] = borrow.EquipmentId;
                 return Task.FromResult<IActionResult>(View(borrow));
             }
@@ -234,59 +236,8 @@ namespace IIS.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // // GET: Student/Borrow/Accept/5
-        // public Task<IActionResult> Accept(int? id)
-        // {
-        //     return ChangeStateGet(id, BorrowState.Pending);
-        // }
-        //
-        // // POST: Student/Borrow/Accept/5
-        // [HttpPost, ActionName("Accept")]
-        // public Task<IActionResult> AcceptBorrow(int? id)
-        // {
-        //     return ChangeState(id, BorrowState.Pending, BorrowState.Accepted);
-        // }
-        //
-        // // GET: Student/Borrow/Reject/5
-        // public Task<IActionResult> Reject(int? id)
-        // {
-        //     return ChangeStateGet(id, BorrowState.Pending);
-        // }
-        //
-        // // POST: Student/Borrow/Reject/5
-        // [HttpPost, ActionName("Reject")]
-        // public Task<IActionResult> RejectBorrow(int? id)
-        // {
-        //     return ChangeState(id, BorrowState.Pending, BorrowState.Rejected);
-        // }
-        //
-        // GET: Student/Borrow/Given/5
-        // public Task<IActionResult> Given(int? id)
-        // {
-        //     return ChangeStateGet(id, BorrowState.Given);
-        // }
-        //
-        // // POST: Student/Borrow/Given/5
-        // [HttpPost, ActionName("Returned")]
-        // public Task<IActionResult> BorrowGiven(int id)
-        // {
-        //     return ChangeState(id, BorrowState.Accepted, BorrowState.Given);
-        // }
-        //
-        // // GET: Student/Borrow/Returned/5
-        // public Task<IActionResult> Returned(int? id)
-        // {
-        //     return ChangeStateGet(id, BorrowState.Given);
-        // }
-        //
-        // // POST: Student/Borrow/Returned/5
-        // [HttpPost, ActionName("Returned")]
-        // public Task<IActionResult> BorrowReturned(int id)
-        // {
-        //     return ChangeState(id, BorrowState.Accepted, BorrowState.Returned);
-        // }
-
         // GET: Student/Borrow/ChangeState/5
+        [Authorize(Roles = "Teacher, Admin")]
         public async Task<IActionResult> ChangeState(int? id)
         {
             if (id == null)
@@ -316,15 +267,16 @@ namespace IIS.Controllers
         }
 
         [ActionName("ChangeState")]
+        [Authorize(Roles = "Teacher, Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ChangeStateConfirmed(int? id, [FromBody] BorrowState state)
+        public async Task<IActionResult> ChangeStateConfirmed(int? id, [FromForm] BorrowState state)
         {
             if (id == null)
             {
                 return BadRequest();
             }
-
+            
             var borrow = await borrowRepository.GetByIdAsync(id.Value);
 
             if (borrow == null)
@@ -332,7 +284,7 @@ namespace IIS.Controllers
                 return NotFound("");
             }
 
-            if (borrow.State.NextPossibleStates().Any(x => x != state))
+            if (borrow.State.NextPossibleStates().All(x => x != state))
             {
                 var possibleStates = borrow.State.NextPossibleStates();
 

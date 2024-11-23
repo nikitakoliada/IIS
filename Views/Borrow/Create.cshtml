@@ -10,7 +10,7 @@
 <hr/>
 <div class="row">
     <div class="col-md-4">
-        <p>You can only make a reservation starting and ending on days of equipment rental: @string.Join(',', ViewBag["RentalDays"])</p>
+        <p>You can only make a reservation starting and ending on days of equipment rental: @string.Join(',', (IEnumerable<string>)ViewData["RentalDays"])</p>
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="number" asp-for="EquipmentId" hidden value="@ViewBag.EquipmentId">
