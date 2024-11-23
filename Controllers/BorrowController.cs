@@ -35,17 +35,7 @@ namespace IIS.Controllers
         // GET: Student/Borrow
         public async Task<IActionResult> Index()
         {
-            List<Borrow> borrows;
-
-            if (User.IsInRole("Student"))
-            {
-                borrows = await borrowRepository.GetByUserId(GetUserId());
-            }
-            else
-            {
-                var user = await userRepository.GetByIdAsync(GetUserId());
-                borrows = await borrowRepository.GetByStudioId(user.AssignedStudioId.Value);
-            }
+            List<Borrow> borrows = await borrowRepository.GetByUserId(GetUserId());
 
             return View(borrows.Select(x => ListBorrowViewModel.FromBorrowModel(x, GetUserId())).ToList());
         }
