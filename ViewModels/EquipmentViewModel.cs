@@ -1,3 +1,5 @@
+using IIS.Models;
+
 namespace IIS.ViewModels;
 
 public class EquipmentViewModel
@@ -20,4 +22,5 @@ public class EquipmentViewModel
 
     public List<RentalDayIntervalViewModel> RentalDayIntervals { get; set; }
 
+    public List<UserViewModel>? UsersForbiddenToBorrow { get; set; }
 }
