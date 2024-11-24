@@ -1,4 +1,5 @@
-@model IEnumerable<IIS.Models.Equipment>
+@model IEnumerable<IIS.ViewModels.ListEquipmentViewModel>
+    
 
 @{
     ViewData["Title"] = "Index";
@@ -25,10 +26,10 @@
             @Html.DisplayNameFor(model => model.MaxRentalTime)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.Studio)
+            @Html.DisplayNameFor(model => model.StudioName)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.EquipmentType)
+            @Html.DisplayNameFor(model => model.EquipmentTypeName)
         </th>
         <th></th>
     </tr>
@@ -47,22 +48,27 @@
                 @Html.DisplayFor(modelItem => item.PurchaseDate)
             </td>
             <td>
-                @(item.MaxRentalTime != null ? item.MaxRentalTime?.Days + " days" : "")
+                @Html.DisplayFor(modelItem => item.MaxRentalTime)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Studio.Name)
+                @Html.DisplayFor(modelItem => item.StudioName)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.EquipmentType.Name)
+                @Html.DisplayFor(modelItem => item.EquipmentTypeName)
             </td>
             <td>
 
+                @if (@item.CanEditOrDelete)
+                {
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> <span> | </span>
                 <a asp-action="Delete" asp-route-id="@item.Id">Delete</a> <span> | </span>
+                }
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                @if(@item.CanBorrow){
                 <a asp-controller="Borrow" asp-action="Create" asp-route-id="@item.Id">Borrow</a>
-            </td>
+                }
+            </td >
         </tr>
     }
-    </tbody>
-</table>
+    </tbody >
+</table >

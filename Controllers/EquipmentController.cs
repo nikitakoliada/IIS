@@ -25,19 +25,21 @@ namespace IIS.Controllers
         public async Task<IActionResult> Index()
         {
             var currentUser = await userRepository.GetUserWithStudioAsync(User.Identity.Name);
-            if (User.IsInRole("Student") || User.IsInRole("Teacher"))
+            List<Equipment> equipments = new List<Equipment>();
+
+            if (User.IsInRole("Student") || User.IsInRole("Teacher")|| User.IsInRole("StudioAdmin"))
             {
                 int studioId = currentUser.AssignedStudioId.Value;
                 if (studioId != null)
                 {
-                    return View(await equipmentRepository.GetByStudioIdAsync(studioId));
-                }
-                else if (currentUser.AssignedStudioId == null)
-                {
-                    return View(new List<Equipment>());
+                    equipments = await equipmentRepository.GetByStudioIdAsync(studioId);
                 }
             }
-            return View(await equipmentRepository.GetAllWithIncludesAsync());
+            else
+            {
+                equipments = await equipmentRepository.GetAllWithIncludesAsync();
+            }
+            return View(equipments.Select(x => ListEquipmentViewModel.FromEquipmentModel(x, currentUser.Id, User)).ToList());
         }
         
 
