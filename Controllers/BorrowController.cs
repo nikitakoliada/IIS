@@ -32,7 +32,7 @@ namespace IIS.Controllers
             this.userRepository = userRepository;
         }
 
-        // GET: Student/Borrow
+        // GET: Borrow
         public async Task<IActionResult> Index()
         {
             List<Borrow> borrows = await borrowRepository.GetByUserId(GetUserId());
@@ -58,7 +58,7 @@ namespace IIS.Controllers
             return View(borrows.Select(x => ListBorrowViewModel.FromBorrowModel(x, GetUserId())).ToList());
         }
 
-        // GET: Student/Borrow/Details/5
+        // GET: Borrow/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -78,7 +78,7 @@ namespace IIS.Controllers
             return View(borrow);
         }
 
-        // GET: Student/Borrow/Create/1
+        // GET: Borrow/Create/1
         public async Task<IActionResult> Create(int id)
         {
             var correspondingEquipment = await equipmentRepository.GetByIdWithIncludesAsync(id);
@@ -102,9 +102,7 @@ namespace IIS.Controllers
             return View();
         }
 
-        // POST: Student/Borrow/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: Borrow/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateBorrowViewModel borrow)
@@ -182,7 +180,7 @@ namespace IIS.Controllers
         }
 
 
-        // GET: Student/Borrow/Delete/5
+        // GET: Borrow/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -204,7 +202,7 @@ namespace IIS.Controllers
             return View(borrow);
         }
 
-        // POST: Student/Borrow/Delete/5
+        // POST: Borrow/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -226,7 +224,7 @@ namespace IIS.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Student/Borrow/ChangeState/5
+        // GET: Borrow/ChangeState/5
         [Authorize(Roles = "Teacher, Admin")]
         public async Task<IActionResult> ChangeState(int? id)
         {
