@@ -28,7 +28,7 @@ public class ListEquipmentViewModel
             Name = model.Name,
             ManufactureYear = model.ManufactureYear,
             PurchaseDate = model.PurchaseDate,
-            MaxRentalTime = model.MaxRentalTime.HasValue ? $"{model.MaxRentalTime.HasValue} days" : "Unlimited",
+            MaxRentalTime = model.MaxRentalTime.HasValue ? $"{model.MaxRentalTime.Value.Days} days" : "Unlimited",
             StudioName = model.Studio.Name,
             EquipmentTypeName = model.EquipmentType.Name,
             CanBorrow = model.UsersForbiddenToBorrow.All(u => u.Id != userId),

@@ -239,6 +239,24 @@
         const startTime = document.getElementById("startTimeInput").value;
         const endTime = document.getElementById("endTimeInput").value;
 
+        const errorContainer = document.getElementById("timeValidationError");
+        if (!errorContainer) {
+            // Create an error message container if it doesn't exist
+            const errorDiv = document.createElement("div");
+            errorDiv.id = "timeValidationError";
+            errorDiv.className = "text-danger";
+            document.getElementById("intervalSection").appendChild(errorDiv);
+        } else {
+            errorContainer.textContent = ""; // Clear any previous error messages
+        }
+
+        // Validate time
+        if (startTime >= endTime) {
+            document.getElementById("timeValidationError").textContent =
+                "Start time must be earlier than end time.";
+            return; // Stop further execution
+        }
+
         if (dayOfWeek && pickupPlace && startTime && endTime) {
             const intervalsContainer = document.getElementById("selectedIntervalsContainer");
 

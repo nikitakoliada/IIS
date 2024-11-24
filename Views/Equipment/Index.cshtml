@@ -45,7 +45,7 @@
                 @Html.DisplayFor(modelItem => item.ManufactureYear)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.PurchaseDate)
+                @item.PurchaseDate.Date.ToShortDateString()
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.MaxRentalTime)
