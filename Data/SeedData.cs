@@ -132,8 +132,8 @@ public static class SeedData
         {
             UserId = context.Users.First().Id,
             EquipmentId = equipment.Id,
-            FromDate = DateTime.Now.AddDays(-30),
-            ToDate = DateTime.Now.AddDays(-25),
+            FromDate = DateTime.Now.AddDays(25),
+            ToDate = DateTime.Now.AddDays(30),
             State = Enums.BorrowState.Accepted
         });
 

@@ -33,6 +33,7 @@ namespace IIS.Controllers
         }
 
         // GET: Borrow
+        [Authorize(Roles = "Student, StudioAdmin, Teacher, Admin")]
         public async Task<IActionResult> Index()
         {
             List<Borrow> borrows = await borrowRepository.GetByUserId(GetUserId());
@@ -59,6 +60,7 @@ namespace IIS.Controllers
         }
 
         // GET: Borrow/Details/5
+        [Authorize(Roles = "Student, StudioAdmin, Teacher, Admin")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
