@@ -54,7 +54,7 @@ namespace IIS.Controllers
             {
                 borrows = await borrowRepository.GetAllWithIncludesAsync();
             }
-            
+
             return View(borrows.Select(x => ListBorrowViewModel.FromBorrowModel(x, GetUserId())).ToList());
         }
 
@@ -91,8 +91,9 @@ namespace IIS.Controllers
                 return NotFound();
             }
 
-            if (correspondingEquipment.UsersForbiddenToBorrow.Any(x => x.Id == GetUserId()) ||
-                user.AssignedStudioId == null || user.AssignedStudioId != correspondingEquipment.StudioId)
+            if ((correspondingEquipment.UsersForbiddenToBorrow.Any(x => x.Id == GetUserId()) ||
+                 user.AssignedStudioId == null || user.AssignedStudioId != correspondingEquipment.StudioId) &&
+                !User.IsInRole("Admin"))
             {
                 return Forbid();
             }
@@ -246,6 +247,11 @@ namespace IIS.Controllers
 
             var possibleStates = borrow.State.NextPossibleStates();
 
+            if (possibleStates.Count == 0)
+            {
+                return BadRequest();
+            }
+
             ViewData["NextPossibleStates"] =
                 new SelectList(
                     possibleStates.Select(x => new { Value = (int)x, Text = x.ToString() }), "Value",
@@ -264,7 +270,7 @@ namespace IIS.Controllers
             {
                 return BadRequest();
             }
-            
+
             var borrow = await borrowRepository.GetByIdAsync(id.Value);
 
             if (borrow == null)
@@ -280,7 +286,7 @@ namespace IIS.Controllers
                     new SelectList(
                         possibleStates.Select(x => new { Value = (int)x, Text = x.ToString() }), "Value",
                         "Text", (int)possibleStates.FirstOrDefault());
-                
+
                 return View(borrow);
             }
 
