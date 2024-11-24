@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace IIS.ViewModels;
@@ -5,7 +6,9 @@ namespace IIS.ViewModels;
 public class CreateBorrowViewModel : IValidatableObject
 {
     public int EquipmentId { get; set; }
+    [DisplayName("Start Date")]
     public DateTime FromDate { get; set; }
+    [DisplayName("End Date")]
     public DateTime ToDate { get; set; }
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
