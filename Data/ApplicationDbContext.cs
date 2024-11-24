@@ -40,6 +40,12 @@ public class ApplicationDbContext : IdentityDbContext
 
         modelBuilder.Entity<Equipment>()
             .HasKey(e => e.Id);
+        
+        modelBuilder.Entity<Equipment>()
+            .Property(e => e.MaxRentalTime)
+            .HasConversion(
+                v => v.HasValue ? v.Value.TotalDays : (double?)null,
+                v => v.HasValue ? TimeSpan.FromDays(v.Value) : null);
 
         modelBuilder.Entity<Equipment>()
             .HasOne(e => e.Studio)
