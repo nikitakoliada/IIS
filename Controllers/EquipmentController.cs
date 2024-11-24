@@ -14,11 +14,11 @@ using IIS.ViewModels;
 namespace IIS.Controllers
 {
     public class EquipmentController(
-        EquipmentTypeRepository equipmentTypeRepository,
-        StudioRepository studioRepository,
-        EquipmentRepository equipmentRepository,
         UserRepository userRepository,
-        RentalDayIntervalRepository rentalDayIntervalRepository)
+        EquipmentRepository equipmentRepository,
+        EquipmentTypeRepository equipmentTypeRepository,
+        RentalDayIntervalRepository rentalDayIntervalRepository,
+        StudioRepository studioRepository)
         : Controller
     {
         // GET: Equipment
@@ -41,7 +41,6 @@ namespace IIS.Controllers
             }
             return View(equipments.Select(x => ListEquipmentViewModel.FromEquipmentModel(x, currentUser.Id, User)).ToList());
         }
-        
 
         // GET: Equipment/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -164,11 +163,21 @@ namespace IIS.Controllers
                     StartTime = interval.StartTime,
                     EndTime = interval.EndTime,
                     Place = interval.Place
+                }).ToList(),
+                UsersForbiddenToBorrow = equipment.UsersForbiddenToBorrow.Select(user => new UserViewModel
+                {
+                    Id = user.Id,
+                    Name = user.Email
                 }).ToList()
             };
 
-            ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name", equipment.EquipmentTypeId);
-            ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name", equipment.StudioId);
+            ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name",
+                equipment.EquipmentTypeId);
+            ViewData["StudioId"] =
+                new SelectList(await studioRepository.GetAllAsync(), "Id", "Name", equipment.StudioId);
+            ViewData["StudioUsers"] =
+                (await userRepository.GetAllFromStudioWithIncludesFromStudioAsync(equipment.StudioId)).Select(x =>
+                    new UserViewModel() { Id = x.Id, Name = x.Email });
 
             return View(model);
         }
@@ -185,8 +194,14 @@ namespace IIS.Controllers
 
             if (!ModelState.IsValid)
             {
-                ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name", model.EquipmentTypeId);
-                ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name", model.StudioId);
+                ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name",
+                    model.EquipmentTypeId);
+                ViewData["StudioId"] =
+                    new SelectList(await studioRepository.GetAllAsync(), "Id", "Name", model.StudioId);
+                ViewData["StudioUsers"] =
+                    (await userRepository.GetAllFromStudioWithIncludesFromStudioAsync(model.StudioId)).Select(x =>
+                        new UserViewModel() { Id = x.Id, Name = x.Email });
+
                 return View(model);
             }
 
@@ -224,6 +239,32 @@ namespace IIS.Controllers
                         EquipmentId = equipment.Id
                     };
                     equipment.RentalDayIntervals.Add(intervalModel);
+                }
+
+                var existingForbiddenUsers = equipment.UsersForbiddenToBorrow.ToList();
+                equipment.UsersForbiddenToBorrow.Clear();
+
+                if (model.UsersForbiddenToBorrow != null)
+                {
+                    foreach (var forbiddenUser in model.UsersForbiddenToBorrow.GroupBy(x => x.Id).Select(x => x.First()))
+                    {
+                        var foundForbiddenUser = await userRepository.GetByIdAsync(forbiddenUser.Id);
+                        if (foundForbiddenUser == null)
+                        {
+                            ViewData["TypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id",
+                                "Name", model.EquipmentTypeId);
+                            ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name",
+                                model.StudioId);
+                            ViewData["UserId"] = new SelectList(await userRepository.GetAllAsync(), "Id", "Name");
+                            ViewData["StudioUsers"] =
+                                (await userRepository.GetAllFromStudioWithIncludesFromStudioAsync(equipment.StudioId)).Select(x =>
+                                    new UserViewModel() { Id = x.Id, Name = x.Email });
+
+                            return View(model);
+                        }
+
+                        equipment.UsersForbiddenToBorrow.Add(foundForbiddenUser);
+                    }
                 }
 
                 await equipmentRepository.UpdateAsync(equipment);
