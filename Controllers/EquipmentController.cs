@@ -136,8 +136,16 @@ namespace IIS.Controllers
         {
             ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name",
                 model.EquipmentTypeId);
-            ViewData["StudioId"] =
-                new SelectList(await studioRepository.GetAllAsync(), "Id", "Name", model.StudioId);
+            if (User.IsInRole("Teacher"))
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
+                ViewData["StudioId"] =
+                    new SelectList(new List<Studio>([await studioRepository.GetByUserIdAsync(userId)]), "Id", "Name");
+            }
+            else
+            {
+                ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
+            }
             ViewData["StudioUsers"] =
                 (await userRepository.GetAllFromStudioWithIncludesFromStudioAsync(model.StudioId))
                 .Where(x => x.UserName != User.Identity.Name).Select(x =>
