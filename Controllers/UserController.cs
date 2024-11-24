@@ -124,9 +124,8 @@ namespace IIS.Controllers
         // POST: User/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Edit(string id,
-            [Bind("Id,Name,Address,BirthDate,AssignedStudioId,IsAssignedToMyStudio,IsAdmin,IsStudioAdmin,IsTeacher,IsStudent")] UserEditViewModel user)
+        [Authorize(Roles = "Admin,StudioAdmin,Teacher")]
+        public async Task<IActionResult> Edit(string id, UserEditViewModel user)
         {
             if (id != user.Id)
             {
@@ -139,7 +138,6 @@ namespace IIS.Controllers
             }
 
             var foundUser = await userRepository.GetByIdAsync(id);
-
             if (foundUser == null)
             {
                 return NotFound();
@@ -148,10 +146,31 @@ namespace IIS.Controllers
             var currentUser = (await userManager.GetUserAsync(HttpContext.User))!;
             var currentUserRoles = userManager.GetRolesAsync(currentUser).Result;
 
-            // !ADMIN: cannot set assigned studio for user
+            // !ADMIN: cannot change user details and assign other studio for user
             if (!currentUserRoles.Contains("Admin"))
             {
+                user.Name = foundUser.Name;
+                user.Address = foundUser.Address;
+                user.BirthDate = foundUser.BirthDate;
                 user.AssignedStudioId = null;
+            }
+
+            // STUDIOADMIN: assign to ones studio
+            if (currentUserRoles.Contains("StudioAdmin") && !currentUserRoles.Contains("Admin"))
+            {
+                if (foundUser.AssignedStudioId != null && foundUser.AssignedStudioId != currentUser.AssignedStudioId)
+                {
+                    return NotFound();
+                }
+
+                if (user.IsAssignedToMyStudio.HasValue && user.IsAssignedToMyStudio.Value)
+                {
+                    user.AssignedStudioId = currentUser.AssignedStudioId;
+                }
+                else
+                {
+                    user.AssignedStudioId = 0;
+                }
             }
 
             // ADMIN: make StudioAdmin
@@ -177,25 +196,6 @@ namespace IIS.Controllers
                 else
                 {
                     await userManager.RemoveFromRoleAsync(foundUser, "Teacher");
-                }
-            }
-
-            // STUDIOADMIN: assign to ones studio
-            if (currentUserRoles.Contains("StudioAdmin") && !currentUserRoles.Contains("Admin"))
-            {
-                var userModel = (await userRepository.GetByIdAsync(user.Id))!;
-                if (userModel.AssignedStudioId != null || userModel.AssignedStudioId != currentUser.AssignedStudioId)
-                {
-                    return NotFound();
-                }
-
-                if (user.IsAssignedToMyStudio.HasValue && user.IsAssignedToMyStudio.Value)
-                {
-                    userModel.AssignedStudioId = currentUser.AssignedStudioId;
-                }
-                else
-                {
-                    userModel.AssignedStudio = null;
                 }
             }
 
@@ -272,12 +272,15 @@ namespace IIS.Controllers
                 return null;
             }
 
-            user.Name = viewModel.Name;
-            user.Address = viewModel.Address;
-            user.BirthDate = viewModel.BirthDate;
+            user.Name = viewModel.Name ?? user.Name;
+            user.Address = viewModel.Address ?? user.Address;
+            user.BirthDate = viewModel.BirthDate ?? user.BirthDate;
             if (viewModel.AssignedStudioId == 0)
             {
                 user.AssignedStudioId = null;
+                await userManager.RemoveFromRoleAsync(user, "StudioAdmin");
+                await userManager.RemoveFromRoleAsync(user, "Teacher");
+                await userManager.RemoveFromRoleAsync(user, "Student");
             }
             else if (viewModel.AssignedStudioId != null && await studioRepository.GetByIdAsync(viewModel.AssignedStudioId.Value) != null)
             {
@@ -299,11 +302,11 @@ namespace IIS.Controllers
             }
             else if (loggedInUserRoles.Contains("StudioAdmin"))
             {
-                return givenUser.AssignedStudio == loggedInUser.AssignedStudio || givenUser.AssignedStudio == null;
+                return givenUser.AssignedStudioId == loggedInUser.AssignedStudioId || givenUser.AssignedStudioId == null;
             }
             else if (loggedInUserRoles.Contains("Teacher"))
             {
-                return givenUser.AssignedStudio == loggedInUser.AssignedStudio;
+                return givenUser.AssignedStudioId == loggedInUser.AssignedStudioId;
             }
 
             return loggedInUser == givenUser;

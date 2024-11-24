@@ -36,7 +36,7 @@ public class UserRepository(ApplicationDbContext context)
 
     public Task<User?> GetByIdAsync(string id)
     {
-        return context.Users.FirstOrDefaultAsync(u => u.Id == id);
+        return context.Users.Include(u => u.AssignedStudio).FirstOrDefaultAsync(u => u.Id == id);
     }
     
     public Task<bool> ExistsAsync(string id)
