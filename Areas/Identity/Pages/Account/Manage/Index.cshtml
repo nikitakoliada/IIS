@@ -1,0 +1,72 @@
+﻿@page
+@model IIS.Areas.Identity.Pages.Account.Manage.IndexModel
+@{
+ViewData["Title"] = "Profile";
+}
+
+<h2>Your Profile</h2>
+
+<div class="text-success">
+    @Model.StatusMessage
+</div>
+
+<form method="post">
+    <div class="form-group">
+        <label>Full Name:</label>
+        @if (Model.IsEditMode)
+        {
+        <input type="text" asp-for="Input.Name" class="form-control" value="@Model.Input.Name" />
+        }
+        else
+        {
+        <span class="form-control-plaintext">@Model.Input.Name</span>
+        }
+    </div>
+
+    <div class="form-group">
+        <label>Address:</label>
+        @if (Model.IsEditMode)
+        {
+        <input type="text" asp-for="Input.Address" class="form-control" value="@Model.Input.Address" />
+        }
+        else
+        {
+        <span class="form-control-plaintext">@Model.Input.Address</span>
+        }
+    </div>
+
+    <div class="form-group">
+        <label>Date of Birth:</label>
+        @if (Model.IsEditMode)
+        {
+        <input type="date" asp-for="Input.BirthDate" class="form-control" value="@Model.Input.BirthDate.ToString("yyyy-MM-dd")" />
+        }
+        else
+        {
+        <span class="form-control-plaintext">@Model.Input.BirthDate.ToShortDateString()</span>
+        }
+    </div>
+
+    <div class="form-group">
+        <label>Phone Number:</label>
+        @if (Model.IsEditMode)
+        {
+        <input type="tel"  asp-for="Input.PhoneNumber" class="form-control" value="@Model.Input.PhoneNumber" />
+        }
+        else
+        {
+        <span class="form-control-plaintext">@Model.Input.PhoneNumber</span>
+        }
+    </div>
+    
+
+    @if (Model.IsEditMode)
+    {
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-page="./Index" class="btn btn-secondary">Cancel</a>
+    }
+    else
+    {
+    <button type="button" class="btn btn-primary" onclick="location.href='?handler=Edit'">Edit</button>
+    }
+</form>

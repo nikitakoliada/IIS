@@ -8,8 +8,11 @@ public static class SeedData
 {
     public static async Task Initialize(IServiceProvider serviceProvider)
     {
-        using var context = new ApplicationDbContext(
+        await using var context = new ApplicationDbContext(
             serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>());
+
+        string teacherId = Guid.NewGuid().ToString();
+        int teacherStudioId = 200;
         
         context.Users.RemoveRange(context.Users); // Remove all users
         
@@ -29,17 +32,90 @@ public static class SeedData
         if (!context.Studios.Any())
         {
             context.Studios.AddRange(
-                new Studio { Name = "Studio A" },
+                new Studio { Id = teacherStudioId, Name = "Studio A" },
                 new Studio { Name = "Studio B" },
                 new Studio { Name = "Studio C" }
             );
 
             await context.SaveChangesAsync();
         }
+        
+        // Seed Users
+        if (!context.Users.Any())
+        {
+            var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
+            
+            var admin = new User
+            {
+                Name = "Admin",
+                Email = "admin@example.com",
+                UserName = "admin@example.com",
+                NormalizedEmail = "ADMIN@EXAMPLE.COM",
+                NormalizedUserName = "ADMIN@EXAMPLE.COM",
+                Address = "123 Main St",
+                BirthDate = DateTime.Today.AddYears(-18),
+                EmailConfirmed = true,
+            };
+
+            admin.PasswordHash = new PasswordHasher<User>().HashPassword(admin, "qwerty678");
+
+            await userManager.CreateAsync(admin);
+            await userManager.AddToRoleAsync(admin, "Admin"); // Assign Admin role
+
+            // Add other users
+            var john = new User
+            {
+                Id = teacherId,
+                Name = "John Doe",
+                Email = "johndoe@example.com",
+                UserName = "johndoe@example.com",
+                NormalizedEmail = "JOHNDOE@EXAMPLE.COM",
+                NormalizedUserName = "JOHNDOE@EXAMPLE.COM",
+                Address = "123 Main St",
+                BirthDate = DateTime.Today.AddYears(-20),
+                AssignedStudioId = teacherStudioId,
+                EmailConfirmed = true,
+
+            };
+
+            var jane = new User
+            {
+                Name = "Jane Doe",
+                Email = "janedoe@example.com",
+                UserName = "janedoe@example.com",
+                NormalizedEmail = "JANEDOE@EXAMPLE.COM",
+                NormalizedUserName = "JANEDOE@EXAMPLE.COM",
+                Address = "456 Main St",
+                BirthDate = DateTime.Today.AddYears(-22), 
+                EmailConfirmed = true,
+            };
+            
+            var studioAdmin = new User
+            {
+                Name = "Jane Doe",
+                Email = "janedoe@example.com",
+                UserName = "janedoe@example.com",
+                NormalizedEmail = "JANEDOE@EXAMPLE.COM",
+                NormalizedUserName = "JANEDOE@EXAMPLE.COM",
+                Address = "456 Main St",
+                BirthDate = DateTime.Today.AddYears(-22), 
+                EmailConfirmed = true,
+            };
+
+            john.PasswordHash = new PasswordHasher<User>().HashPassword(john, "qwerty678");
+            jane.PasswordHash = new PasswordHasher<User>().HashPassword(jane, "qwerty678");
+
+            await userManager.CreateAsync(john); // Assign a password for John
+            await userManager.AddToRoleAsync(john, "Teacher"); // Assign Teacher role
+            await userManager.CreateAsync(jane); // Assign a password for Jane
+            
+            await context.SaveChangesAsync();
+        }
 
         // Seed Equipments
         if (!context.Equipments.Any())
         {
+            
             context.Equipments.AddRange(
                 new Equipment
                 {
@@ -47,7 +123,8 @@ public static class SeedData
                     ManufactureYear = 2021,
                     PurchaseDate = new DateTime(2021, 1, 1),
                     StudioId = context.Studios.First().Id,
-                    EquipmentTypeId = context.EquipmentTypes.First().Id
+                    EquipmentTypeId = context.EquipmentTypes.First().Id,
+                    OwnerId = teacherId
                 },
                 new Equipment
                 {
@@ -55,7 +132,8 @@ public static class SeedData
                     ManufactureYear = 2020,
                     PurchaseDate = new DateTime(2020, 1, 1),
                     StudioId = context.Studios.First().Id,
-                    EquipmentTypeId = context.EquipmentTypes.Skip(1).First().Id
+                    EquipmentTypeId = context.EquipmentTypes.Skip(1).First().Id,
+                    OwnerId = teacherId
                 },
                 // ... (other equipment entries)
                 new Equipment
@@ -64,7 +142,8 @@ public static class SeedData
                     ManufactureYear = 2021,
                     PurchaseDate = new DateTime(2021, 1, 1),
                     StudioId = context.Studios.Skip(2).First().Id,
-                    EquipmentTypeId = context.EquipmentTypes.Skip(2).First().Id
+                    EquipmentTypeId = context.EquipmentTypes.Skip(2).First().Id,
+                    OwnerId = teacherId
                 }
             );
 
@@ -94,57 +173,6 @@ public static class SeedData
                 }
             );
 
-            await context.SaveChangesAsync();
-        }
-
-        // Seed Users
-        if (!context.Users.Any())
-        {
-            var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
-
-            var admin = new User
-            {
-                Name = "Admin",
-                Email = "admin@example.com",
-                UserName = "admin@example.com",
-                NormalizedEmail = "ADMIN@EXAMPLE.COM",
-                NormalizedUserName = "ADMIN@EXAMPLE.COM",
-                Address = "123 Main St",
-                BirthDate = DateTime.Today.AddYears(-18),
-                EmailConfirmed = true,
-            };
-
-            admin.PasswordHash = new PasswordHasher<User>().HashPassword(admin, "qwerty678");
-
-            await userManager.CreateAsync(admin);
-            await userManager.AddToRoleAsync(admin, "Admin"); // Assign Admin role
-
-            // Add other users
-            var john = new User
-            {
-                Name = "John Doe",
-                Email = "johndoe@example.com",
-                UserName = "johndoe@example.com",
-                NormalizedEmail = "JOHNDOE@EXAMPLE.COM",
-                NormalizedUserName = "JOHNDOE@EXAMPLE.COM",
-                Address = "123 Main St",
-                BirthDate = DateTime.Today.AddYears(-20),
-            };
-
-            var jane = new User
-            {
-                Name = "Jane Doe",
-                Email = "janedoe@example.com",
-                UserName = "janedoe@example.com",
-                NormalizedEmail = "JANEDOE@EXAMPLE.COM",
-                NormalizedUserName = "JANEDOE@EXAMPLE.COM",
-                Address = "456 Main St",
-                BirthDate = DateTime.Today.AddYears(-22)
-            };
-
-            await userManager.CreateAsync(john, "Password123!"); // Assign a password for John
-            await userManager.CreateAsync(jane, "Password123!"); // Assign a password for Jane
-            
             await context.SaveChangesAsync();
         }
     }

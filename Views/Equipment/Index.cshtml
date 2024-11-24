@@ -22,9 +22,6 @@
             @Html.DisplayNameFor(model => model.PurchaseDate)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.Image)
-        </th>
-        <th>
             @Html.DisplayNameFor(model => model.MaxRentalTime)
         </th>
         <th>
@@ -50,9 +47,6 @@
                 @Html.DisplayFor(modelItem => item.PurchaseDate)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Image)
-            </td>
-            <td>
                 @(item.MaxRentalTime != null ? item.MaxRentalTime?.Days + " days" : "")
             </td>
             <td>
@@ -62,13 +56,9 @@
                 @Html.DisplayFor(modelItem => item.EquipmentType.Name)
             </td>
             <td>
-                @if (User.IsInRole("Admin") || User.IsInRole("StudioAdmin") || (User.IsInRole("Teacher") &&  User.Claims.FirstOrDefault(c => c.Type == "AssignedStudioId")?.Value == item.StudioId.ToString()) )
-                {
-                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
-                    <p> | </p>
-                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-                    <p> | </p>
-                }
+
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> <span> | </span>
+                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a> <span> | </span>
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
                 <a asp-controller="Borrow" asp-action="Create" asp-route-id="@item.Id">Borrow</a>
             </td>

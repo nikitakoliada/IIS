@@ -1,15 +1,19 @@
 using System.Security.Claims;
 using IIS.Data;
 using IIS.Enums;
+using IIS.Extensions;
 using IIS.Models;
 using IIS.Repositories;
 using IIS.Services.Abstractions;
 using IIS.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IIS.Controllers
 {
+    [Authorize]
     public class BorrowController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -31,18 +35,26 @@ namespace IIS.Controllers
         // GET: Student/Borrow
         public async Task<IActionResult> Index()
         {
+            List<Borrow> borrows = await borrowRepository.GetByUserId(GetUserId());
+
+            return View(borrows.Select(x => ListBorrowViewModel.FromBorrowModel(x, GetUserId())).ToList());
+        }
+
+        [Authorize(Roles = "Teacher, Admin")]
+        [ActionName("Requests")]
+        public async Task<IActionResult> BorrowRequests()
+        {
             List<Borrow> borrows;
 
-            if (User.IsInRole("Student"))
+            if (User.IsInRole("Teacher"))
             {
-                borrows = await borrowRepository.GetByUserId(GetUserId());
+                borrows = await borrowRepository.GetByOwnerId(GetUserId());
             }
             else
             {
-                var user = await userRepository.GetByIdAsync(GetUserId());
-                borrows = await borrowRepository.GetByStudioId(user.AssignedStudioId.Value);
+                borrows = await borrowRepository.GetAllWithIncludesAsync();
             }
-
+            
             return View(borrows.Select(x => ListBorrowViewModel.FromBorrowModel(x, GetUserId())).ToList());
         }
 
@@ -71,19 +83,21 @@ namespace IIS.Controllers
         {
             var correspondingEquipment = await equipmentRepository.GetByIdWithIncludesAsync(id);
             var user = await userRepository.GetByIdAsync(GetUserId());
-         
+
             if (correspondingEquipment == null)
             {
                 ModelState.AddModelError("",
                     $"Equipment you are trying to borrow does not exist");
                 return NotFound();
             }
-            
+
             if (correspondingEquipment.UsersForbiddenToBorrow.Any(x => x.Id == GetUserId()) ||
                 user.AssignedStudioId == null || user.AssignedStudioId != correspondingEquipment.StudioId)
             {
                 return Forbid();
             }
+
+            ViewData["RentalDays"] = correspondingEquipment.GetRentalDayOfWeeks().Select(x => x.ToString());
             ViewData["EquipmentId"] = id;
             return View();
         }
@@ -95,28 +109,40 @@ namespace IIS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateBorrowViewModel borrow)
         {
+            var correspondingEquipment = await equipmentRepository.GetByIdWithIncludesAsync(borrow.EquipmentId);
+
+            if (correspondingEquipment == null)
+            {
+                ModelState.AddModelError("",
+                    $"Equipment you are trying to borrow does not exist");
+                return await ReturnView(borrow);
+            }
+
             Task<IActionResult> ReturnView(CreateBorrowViewModel borrow)
             {
+                ViewData["RentalDays"] = correspondingEquipment.GetRentalDayOfWeeks().Select(x => x.ToString());
                 ViewData["EquipmentId"] = borrow.EquipmentId;
                 return Task.FromResult<IActionResult>(View(borrow));
             }
 
             if (ModelState.IsValid)
             {
-                var correspondingEquipment = await equipmentRepository.GetByIdWithIncludesAsync(borrow.EquipmentId);
                 var user = await userRepository.GetByIdAsync(GetUserId());
-                if (correspondingEquipment == null)
-                {
-                    ModelState.AddModelError("",
-                        $"Equipment you are trying to borrow does not exist");
-                    return await ReturnView(borrow);
-                }
 
                 if (correspondingEquipment.UsersForbiddenToBorrow.Any(x => x.Id == GetUserId()) ||
                     user.AssignedStudioId == null || user.AssignedStudioId != correspondingEquipment.StudioId)
                 {
                     ModelState.AddModelError("",
                         $"You are not allowed to borrow this equipment");
+                    return await ReturnView(borrow);
+                }
+
+                if (correspondingEquipment.RentalDayIntervals.All(x => borrow.FromDate.DayOfWeek != x.DayOfWeek) ||
+                    correspondingEquipment.RentalDayIntervals.All(x => borrow.ToDate.DayOfWeek != x.DayOfWeek))
+                {
+                    ModelState.AddModelError("",
+                        "You are only allowed to return or take equipment on " +
+                        $"{string.Join(',', correspondingEquipment.GetRentalDayOfWeeks())}");
                     return await ReturnView(borrow);
                 }
 
@@ -170,6 +196,11 @@ namespace IIS.Controllers
                 return NotFound();
             }
 
+            if (borrow.UserId != GetUserId() && !User.IsInRole("Admin"))
+            {
+                return Forbid();
+            }
+
             return View(borrow);
         }
 
@@ -180,53 +211,90 @@ namespace IIS.Controllers
         {
             var borrow = await borrowRepository.GetByIdAsync(id);
 
-            if (borrow != null)
+            if (borrow == null)
             {
-                await borrowRepository.RemoveAsync(borrow);
+                return NotFound();
             }
+
+            if (borrow.UserId != GetUserId() && !User.IsInRole("Admin"))
+            {
+                return Forbid();
+            }
+
+            await borrowRepository.RemoveAsync(borrow);
 
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: Student/Borrow/Accept/5
-        [HttpPost, ActionName("Accept")]
-        public Task<IActionResult> AcceptBorrow(int id)
+        // GET: Student/Borrow/ChangeState/5
+        [Authorize(Roles = "Teacher, Admin")]
+        public async Task<IActionResult> ChangeState(int? id)
         {
-            return ChangeState(id, BorrowState.Pending, BorrowState.Accepted);
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var borrow = await borrowRepository.GetByIdAsync(id.Value);
+            if (borrow == null)
+            {
+                return NotFound();
+            }
+
+            if (borrow.Equipment.OwnerId != GetUserId() && !User.IsInRole("Admin"))
+            {
+                return Forbid();
+            }
+
+            var possibleStates = borrow.State.NextPossibleStates();
+
+            ViewData["NextPossibleStates"] =
+                new SelectList(
+                    possibleStates.Select(x => new { Value = (int)x, Text = x.ToString() }), "Value",
+                    "Text", (int)possibleStates.FirstOrDefault());
+
+            return View(borrow);
         }
 
-        // POST: Student/Borrow/Reject/5
-        [HttpPost, ActionName("Reject")]
-        public Task<IActionResult> RejectBorrow(int id)
+        [ActionName("ChangeState")]
+        [Authorize(Roles = "Teacher, Admin")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangeStateConfirmed(int? id, [FromForm] BorrowState state)
         {
-            return ChangeState(id, BorrowState.Pending, BorrowState.Rejected);
-        }
-
-        // POST: Student/Borrow/Returned/5
-        [HttpPost, ActionName("Returned")]
-        public Task<IActionResult> BorrowReturned(int id)
-        {
-            return ChangeState(id, BorrowState.Accepted, BorrowState.Returned);
-        }
-
-        private async Task<IActionResult> ChangeState(int id, BorrowState requiredState, BorrowState newState)
-        {
-            var borrow = await borrowRepository.GetByIdAsync(id);
+            if (id == null)
+            {
+                return BadRequest();
+            }
+            
+            var borrow = await borrowRepository.GetByIdAsync(id.Value);
 
             if (borrow == null)
             {
                 return NotFound("");
             }
 
-            if (borrow.State != requiredState)
+            if (borrow.State.NextPossibleStates().All(x => x != state))
             {
-                return BadRequest();
+                var possibleStates = borrow.State.NextPossibleStates();
+
+                ViewData["NextPossibleStates"] =
+                    new SelectList(
+                        possibleStates.Select(x => new { Value = (int)x, Text = x.ToString() }), "Value",
+                        "Text", (int)possibleStates.FirstOrDefault());
+                
+                return View(borrow);
             }
 
-            borrow.State = newState;
+            if (borrow.Equipment.OwnerId != GetUserId() && !User.IsInRole("Admin"))
+            {
+                return Forbid();
+            }
+
+            borrow.State = state;
             await borrowRepository.UpdateAsync(borrow);
 
-            return NoContent();
+            return RedirectToAction("Requests");
         }
 
         private string GetUserId() => User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;

@@ -1,8 +1,55 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<style>
+    .container {
+        max-width: 800px;
+        margin: 20px auto;
+        font-family: Arial, sans-serif;
+    }
+
+    .container h2 {
+        color: #2c3e50;
+        font-size: 24px;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 5px;
+    }
+
+    .container p {
+        color: #4d4d4d;
+        font-size: 16px;
+        line-height: 1.6;
+        margin-bottom: 15px;
+    }
+
+    .container p:last-child {
+        margin-bottom: 0;
+    }
+
+    .container {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+  
+</style>
+
+<div class="container">
+    <h2>Welcome to the School Equipment Rental Management System</h2>
+    <p>
+        This system is designed to manage the lending of technical tools and equipment across multiple studios. Each
+        studio owns specific equipment, and each piece of equipment has unique attributes such as the year of
+        manufacture, purchase date, and an image.
+    </p>
+    <p>
+        The owner of the equipment sets the maximum rental duration for each item. Information regarding where and
+        when equipment can be picked up must also be provided. The system organizes equipment into categories (e.g.,
+        computer equipment, cameras, microphones, etc.). These categories are shared among all studios, but only the
+        studio that owns the equipment can manage it.
+    </p>
+    <p>
+        Both students and instructors assigned to a specific studio can reserve and borrow equipment. Additionally,
+        the studio manager can restrict the borrowing of certain equipment to specific users within their studio.
+    </p>
 </div>

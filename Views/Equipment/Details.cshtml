@@ -8,72 +8,86 @@
 
 <div>
     <h4>Equipment</h4>
-    <hr />
+    <hr/>
     <dl class="row">
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Name)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Name)
         </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.ManufactureYear)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.ManufactureYear)
         </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.PurchaseDate)
         </dt>
         <dd class="col-sm-10">
             @Model.PurchaseDate.ToShortDateString()
         </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Image)
         </dt>
         <dd class="col-sm-10">
             <img alt="Equipment Image" src="@Model.Image"/>
         </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.MaxRentalTime)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @(Model.MaxRentalTime != null ? Model.MaxRentalTime?.Days + " days" : "")
         </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Owner)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Owner.Email)
+        </dd>
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Studio)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Studio.Id)
         </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.EquipmentType)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.EquipmentType.Id)
         </dd>
     </dl>
 </div>
 <h4>Rental Day Intervals</h4>
-<hr />
+<hr/>
 
 @if (Model.RentalDayIntervals != null && Model.RentalDayIntervals.Any())
 {
-<div class="list-group">
-    @foreach (var interval in Model.RentalDayIntervals)
-    {
-    <div class="list-group-item">
-        <p><strong>Day of Week:</strong> @interval.DayOfWeek</p>
-        <p><strong>Place:</strong> @interval.Place</p>
-        <p><strong>Start Time:</strong> @interval.StartTime.ToString(@"hh\:mm")</p>
-        <p><strong>End Time:</strong> @interval.EndTime.ToString(@"hh\:mm")</p>
+    <div class="list-group">
+        @foreach (var interval in Model.RentalDayIntervals)
+        {
+            <div class="list-group-item">
+                <p>
+                    <strong>Day of Week:</strong> @interval.DayOfWeek
+                </p>
+                <p>
+                    <strong>Place:</strong> @interval.Place
+                </p>
+                <p>
+                    <strong>Start Time:</strong> @interval.StartTime.ToString(@"hh\:mm")
+                </p>
+                <p>
+                    <strong>End Time:</strong> @interval.EndTime.ToString(@"hh\:mm")
+                </p>
+            </div>
+        }
     </div>
-    }
-</div>
 }
 else
 {
-<p>No rental intervals available.</p>
+    <p>No rental intervals available.</p>
 }
 <div>
     <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |

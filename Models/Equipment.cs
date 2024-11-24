@@ -24,8 +24,16 @@ public class Equipment
     public required int EquipmentTypeId { get; set; }
     [ValidateNever]
     public EquipmentType EquipmentType { get; set; } = null!;
+    [ValidateNever]
+    public User Owner { get; set; }
+    public string OwnerId { get; set; }
     
     public ICollection<Borrow> Borrows { get; set; } = new List<Borrow>();
     public ICollection<User> UsersForbiddenToBorrow { get; set; } = new List<User>();
     public ICollection<RentalDayInterval> RentalDayIntervals { get; set; } = new List<RentalDayInterval>();
+
+    public IList<DayOfWeek> GetRentalDayOfWeeks()
+    {
+        return RentalDayIntervals.Select(x => x.DayOfWeek).Distinct().ToList();
+    }
 }
