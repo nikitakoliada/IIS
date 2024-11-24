@@ -1,8 +1,8 @@
-using IIS.Data;
+using IIS.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace IIS.Models;
+namespace IIS.Data;
 
 public static class SeedData
 {
@@ -11,147 +11,93 @@ public static class SeedData
         await using var context = new ApplicationDbContext(
             serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>());
 
-        string teacherId = Guid.NewGuid().ToString();
-        int teacherStudioId = 200;
-        
-        context.Users.RemoveRange(context.Users); // Remove all users
-        
-        // Seed Equipment Types
-        if (!context.EquipmentTypes.Any())
+        var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
+
+        context.Users.RemoveRange(context.Users);
+        context.Studios.RemoveRange(context.Studios);
+        context.EquipmentTypes.RemoveRange(context.EquipmentTypes);
+        context.Equipments.RemoveRange(context.Equipments);
+        context.RentalDayIntervals.RemoveRange(context.RentalDayIntervals);
+        context.Reservations.RemoveRange(context.Reservations);
+
+        await context.SaveChangesAsync();
+
+        // Studios
+        var studios = new List<Studio>
         {
-            context.EquipmentTypes.AddRange(
-                new EquipmentType { Name = "Laptop" },
-                new EquipmentType { Name = "Mouse" },
-                new EquipmentType { Name = "Keyboard" }
-            );
+            new Studio { Name = "Studio Alpha" },
+            new Studio { Name = "Studio Beta" },
+            new Studio { Name = "Studio Gamma" }
+        };
+        context.Studios.AddRange(studios);
+        await context.SaveChangesAsync();
 
-            await context.SaveChangesAsync();
-        }
-
-        // Seed Studios
-        if (!context.Studios.Any())
+        // EquipmentTypes
+        var equipmentTypes = new List<EquipmentType>
         {
-            context.Studios.AddRange(
-                new Studio { Id = teacherStudioId, Name = "Studio A" },
-                new Studio { Name = "Studio B" },
-                new Studio { Name = "Studio C" }
-            );
+            new EquipmentType { Name = "Laptop" },
+            new EquipmentType { Name = "Camera" },
+            new EquipmentType { Name = "Microphone" }
+        };
+        context.EquipmentTypes.AddRange(equipmentTypes);
+        await context.SaveChangesAsync();
 
-            await context.SaveChangesAsync();
-        }
-        
-        // Seed Users
-        if (!context.Users.Any())
+        // Users
+        var teachers = new Dictionary<int, User>();
+        foreach (var studio in studios)
         {
-            var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
-            
-            var admin = new User
+            var roles = new[] { "Admin", "StudioAdmin", "Teacher", null };
+            foreach (var role in roles)
             {
-                Name = "Admin",
-                Email = "admin@example.com",
-                UserName = "admin@example.com",
-                NormalizedEmail = "ADMIN@EXAMPLE.COM",
-                NormalizedUserName = "ADMIN@EXAMPLE.COM",
-                Address = "123 Main St",
-                BirthDate = DateTime.Today.AddYears(-18),
-                EmailConfirmed = true,
-            };
-
-            admin.PasswordHash = new PasswordHasher<User>().HashPassword(admin, "qwerty678");
-
-            await userManager.CreateAsync(admin);
-            await userManager.AddToRoleAsync(admin, "Admin"); // Assign Admin role
-
-            // Add other users
-            var john = new User
-            {
-                Id = teacherId,
-                Name = "John Doe",
-                Email = "johndoe@example.com",
-                UserName = "johndoe@example.com",
-                NormalizedEmail = "JOHNDOE@EXAMPLE.COM",
-                NormalizedUserName = "JOHNDOE@EXAMPLE.COM",
-                Address = "123 Main St",
-                BirthDate = DateTime.Today.AddYears(-20),
-                AssignedStudioId = teacherStudioId,
-                EmailConfirmed = true,
-
-            };
-
-            var jane = new User
-            {
-                Name = "Jane Doe",
-                Email = "janedoe@example.com",
-                UserName = "janedoe@example.com",
-                NormalizedEmail = "JANEDOE@EXAMPLE.COM",
-                NormalizedUserName = "JANEDOE@EXAMPLE.COM",
-                Address = "456 Main St",
-                BirthDate = DateTime.Today.AddYears(-22), 
-                EmailConfirmed = true,
-            };
-            
-            var studioAdmin = new User
-            {
-                Name = "Jane Doe",
-                Email = "janedoe@example.com",
-                UserName = "janedoe@example.com",
-                NormalizedEmail = "JANEDOE@EXAMPLE.COM",
-                NormalizedUserName = "JANEDOE@EXAMPLE.COM",
-                Address = "456 Main St",
-                BirthDate = DateTime.Today.AddYears(-22), 
-                EmailConfirmed = true,
-            };
-
-            john.PasswordHash = new PasswordHasher<User>().HashPassword(john, "qwerty678");
-            jane.PasswordHash = new PasswordHasher<User>().HashPassword(jane, "qwerty678");
-
-            await userManager.CreateAsync(john); // Assign a password for John
-            await userManager.AddToRoleAsync(john, "Teacher"); // Assign Teacher role
-            await userManager.CreateAsync(jane); // Assign a password for Jane
-            
-            await context.SaveChangesAsync();
-        }
-
-        // Seed Equipments
-        if (!context.Equipments.Any())
-        {
-            
-            context.Equipments.AddRange(
-                new Equipment
+                var user = new User
                 {
-                    Name = "Dell XPS 13",
-                    ManufactureYear = 2021,
-                    PurchaseDate = new DateTime(2021, 1, 1),
-                    StudioId = context.Studios.First().Id,
-                    EquipmentTypeId = context.EquipmentTypes.First().Id,
-                    OwnerId = teacherId
-                },
-                new Equipment
+                    Name = $"{role ?? "Guest"} User {studio.Name}",
+                    Email = $"{role?.ToLower() ?? "guest"}_{studio.Name.Split(" ")[1].ToLower()}@example.com",
+                    UserName = $"{role?.ToLower() ?? "guest"}_{studio.Name.Split(" ")[1].ToLower()}@example.com",
+                    Address = "Brno",
+                    BirthDate = DateTime.Today.AddYears(-20),
+                    AssignedStudioId = studio.Id,
+                    PasswordHash = new PasswordHasher<User>().HashPassword(null, "qwerty678")
+                };
+
+                await userManager.CreateAsync(user);
+                if (role != null) await userManager.AddToRoleAsync(user, role);
+
+                if (role == "Teacher")
                 {
-                    Name = "Logitech G502",
-                    ManufactureYear = 2020,
-                    PurchaseDate = new DateTime(2020, 1, 1),
-                    StudioId = context.Studios.First().Id,
-                    EquipmentTypeId = context.EquipmentTypes.Skip(1).First().Id,
-                    OwnerId = teacherId
-                },
-                // ... (other equipment entries)
-                new Equipment
-                {
-                    Name = "Razer Ornata",
-                    ManufactureYear = 2021,
-                    PurchaseDate = new DateTime(2021, 1, 1),
-                    StudioId = context.Studios.Skip(2).First().Id,
-                    EquipmentTypeId = context.EquipmentTypes.Skip(2).First().Id,
-                    OwnerId = teacherId
+                    teachers[studio.Id] = user;
                 }
-            );
-
-            await context.SaveChangesAsync();
+            }
         }
 
-        // Seed Rental Day Intervals
-        if (!context.RentalDayIntervals.Any())
+        await context.SaveChangesAsync();
+
+        // Equipments and Rental Day Intervals
+        var equipments = new List<Equipment>();
+        foreach (var studio in studios)
+        {
+            foreach (var equipmentType in equipmentTypes)
+            {
+                for (int i = 0; i < 2; i++) // Two equipments of each type per studio
+                {
+                    var equipment = new Equipment
+                    {
+                        Name = $"{equipmentType.Name} {i + 1} - {studio.Name}",
+                        ManufactureYear = 2022 - i,
+                        PurchaseDate = DateTime.Now.AddYears(-2 - i),
+                        StudioId = studio.Id,
+                        EquipmentTypeId = equipmentType.Id,
+                        OwnerId = teachers[studio.Id].Id,
+                    };
+                    equipments.Add(equipment);
+                }
+            }
+        }
+
+        context.Equipments.AddRange(equipments);
+        await context.SaveChangesAsync();
+
+        foreach (var equipment in equipments)
         {
             context.RentalDayIntervals.AddRange(
                 new RentalDayInterval
@@ -160,20 +106,40 @@ public static class SeedData
                     StartTime = new TimeOnly(8, 0),
                     EndTime = new TimeOnly(16, 0),
                     Place = "Room 101",
-                    EquipmentId = context.Equipments.First().Id
+                    EquipmentId = equipment.Id
                 },
-                // ... (other rental day interval entries)
+                new RentalDayInterval
+                {
+                    DayOfWeek = DayOfWeek.Wednesday,
+                    StartTime = new TimeOnly(9, 0),
+                    EndTime = new TimeOnly(17, 0),
+                    Place = "Room 102",
+                    EquipmentId = equipment.Id
+                },
                 new RentalDayInterval
                 {
                     DayOfWeek = DayOfWeek.Friday,
-                    StartTime = new TimeOnly(9, 0),
-                    EndTime = new TimeOnly(19, 0),
-                    Place = "Room 101",
-                    EquipmentId = context.Equipments.First().Id
+                    StartTime = new TimeOnly(10, 0),
+                    EndTime = new TimeOnly(18, 0),
+                    Place = "Room 103",
+                    EquipmentId = equipment.Id
                 }
             );
-
-            await context.SaveChangesAsync();
         }
+
+        await context.SaveChangesAsync();
+
+        // Borrow
+        var borrow = equipments.Take(5).Select(equipment => new Borrow
+        {
+            UserId = context.Users.First().Id,
+            EquipmentId = equipment.Id,
+            FromDate = DateTime.Now.AddDays(-30),
+            ToDate = DateTime.Now.AddDays(-25),
+            State = Enums.BorrowState.Accepted
+        });
+
+        context.Reservations.AddRange(borrow);
+        await context.SaveChangesAsync();
     }
 }
