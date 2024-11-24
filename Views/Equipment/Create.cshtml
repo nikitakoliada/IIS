@@ -113,42 +113,53 @@ ViewData["Title"] = "Create";
         if (dayOfWeek && pickupPlace && startTime && endTime) {
             const intervalsContainer = document.getElementById("selectedIntervalsContainer");
 
-            // Create a new label element with selected interval details
+            // Create a new div for the interval
             const intervalDiv = document.createElement("div");
             intervalDiv.className = "badge bg-secondary m-1 p-2 d-flex align-items-center";
-            intervalDiv.setAttribute("data-index", rentalIntervalIndex);
 
             const label = document.createElement("span");
             label.textContent = `Day: ${dayOfWeek}, Place: ${pickupPlace}, Start: ${startTime}, End: ${endTime}`;
             intervalDiv.appendChild(label);
 
-            // Add delete button to remove this interval
+            // Add delete button
             const deleteButton = document.createElement("button");
             deleteButton.className = "btn btn-danger btn-sm ms-2";
             deleteButton.textContent = "x";
-            deleteButton.onclick = function() {
-                removeRentalInterval(intervalDiv, rentalIntervalIndex);
+            deleteButton.onclick = function () {
+                removeRentalInterval(intervalDiv, rentalIntervalIndex - 1);
             };
             intervalDiv.appendChild(deleteButton);
 
             intervalsContainer.appendChild(intervalDiv);
 
+            // Add hidden inputs for binding
             const form = document.getElementById("eq_form");
-
-            // Add hidden inputs for model binding
             addHiddenInput(form, `RentalDayIntervals[${rentalIntervalIndex}].DayOfWeek`, dayOfWeek);
             addHiddenInput(form, `RentalDayIntervals[${rentalIntervalIndex}].Place`, pickupPlace);
             addHiddenInput(form, `RentalDayIntervals[${rentalIntervalIndex}].StartTime`, startTime);
             addHiddenInput(form, `RentalDayIntervals[${rentalIntervalIndex}].EndTime`, endTime);
 
-            // Clear input fields after adding an interval
+            rentalIntervalIndex++;
             document.getElementById("pickupPlaceInput").value = "";
             document.getElementById("startTimeInput").value = "";
             document.getElementById("endTimeInput").value = "";
             document.getElementById("intervalSection").style.display = "none";
-
-            rentalIntervalIndex++; // Increment the index for the next interval
         }
+    }
+    
+    function removeRentalInterval(intervalDiv, index) {
+        // Remove the interval's visual representation
+        intervalDiv.remove();
+
+        // Find and remove the associated hidden inputs from the form
+        const form = document.getElementById("eq_form");
+        form.querySelectorAll(`input[name^='RentalDayIntervals[${index}].DayOfWeek']`).forEach(el => el.remove());
+        form.querySelectorAll(`input[name^='RentalDayIntervals[${index}].Place']`).forEach(el => el.remove());
+        form.querySelectorAll(`input[name^='RentalDayIntervals[${index}].StartTime']`).forEach(el => el.remove());
+        form.querySelectorAll(`input[id^='RentalDayIntervals[${index}].EndTime']`).forEach(el => el.remove());
+
+        // Re-index remaining intervals to maintain a consistent order
+        reIndexRentalIntervals();
     }
 
     function addHiddenInput(form, name, value) {
@@ -160,10 +171,28 @@ ViewData["Title"] = "Create";
         form.appendChild(input);
     }
 
-    function removeRentalInterval(intervalDiv, index) {
-        intervalDiv.remove();
+    function reIndexRentalIntervals() {
+        const form = document.getElementById("eq_form");
+        const intervalsContainer = document.getElementById("selectedIntervalsContainer");
 
-        const form = document.querySelector("form");
-        form.querySelectorAll(`input[name^='RentalDayIntervals[${index}]']`).forEach(input => input.remove());
+        rentalIntervalIndex = 0; // Reset the index
+        Array.from(intervalsContainer.children).forEach((intervalDiv) => {
+            // Update the `data-index` attribute for the visual representation
+            intervalDiv.setAttribute("data-index", rentalIntervalIndex);
+
+            // Remove existing hidden inputs for the current interval
+            form.querySelectorAll(`input[name^='RentalDayIntervals[${rentalIntervalIndex}]']`).forEach(input => input.remove());
+
+            // Re-create hidden inputs based on the displayed interval data
+            const label = intervalDiv.querySelector("span").textContent;
+            const [dayPart, placePart, startPart, endPart] = label.match(/Day: (.+), Place: (.+), Start: (.+), End: (.+)/).slice(1);
+
+            addHiddenInput(form, `RentalDayIntervals[${rentalIntervalIndex}].DayOfWeek`, dayPart);
+            addHiddenInput(form, `RentalDayIntervals[${rentalIntervalIndex}].Place`, placePart);
+            addHiddenInput(form, `RentalDayIntervals[${rentalIntervalIndex}].StartTime`, startPart);
+            addHiddenInput(form, `RentalDayIntervals[${rentalIntervalIndex}].EndTime`, endPart);
+
+            rentalIntervalIndex++; // Increment index for the next interval
+        });
     }
 </script>
