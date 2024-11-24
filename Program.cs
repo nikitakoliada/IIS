@@ -23,14 +23,19 @@ async Task CreateRoles(RoleManager<IdentityRole> roleManager)
     }
 }
 
+bool IsLocalEnvironment()
+{
+    return Environment.GetEnvironmentVariable("IsLocalEnvironment") == "true";
+}
+
 
 var builder = WebApplication.CreateBuilder(args);
-
+var connectionStringName = IsLocalEnvironment() ? "DefaultConnection" : "AzureConnection";
 // Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-                       throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString(connectionStringName) ??
+                       throw new InvalidOperationException($"Connection string {connectionStringName} not found.");
 
-if (builder.Environment.IsDevelopment())
+if (builder.Environment.IsDevelopment() && IsLocalEnvironment())
 {
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlite(connectionString));
@@ -38,7 +43,7 @@ if (builder.Environment.IsDevelopment())
 else
 {
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseMySQL(connectionString));
+        options.UseSqlServer(connectionString));
 }
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -63,7 +68,7 @@ using (var scope = app.Services.CreateScope())
 {
     await CreateRoles(scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>());
 
-    SeedData.Initialize(scope.ServiceProvider);
+    await SeedData.Initialize(scope.ServiceProvider);
 }
 
 // Configure the HTTP request pipeline.

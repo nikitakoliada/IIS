@@ -8,9 +8,7 @@ public static class SeedData
 {
     public static async Task Initialize(IServiceProvider serviceProvider)
     {
-        await using var context = new ApplicationDbContext(
-            serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>());
-
+        var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
         var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
 
         context.Users.RemoveRange(context.Users);
@@ -19,7 +17,7 @@ public static class SeedData
         context.Equipments.RemoveRange(context.Equipments);
         context.RentalDayIntervals.RemoveRange(context.RentalDayIntervals);
         context.Reservations.RemoveRange(context.Reservations);
-
+        
         await context.SaveChangesAsync();
 
         // Studios
