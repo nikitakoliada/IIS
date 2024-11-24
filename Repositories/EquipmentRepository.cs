@@ -11,6 +11,7 @@ public class EquipmentRepository(ApplicationDbContext context)
         return context.Equipments
             .Include(e => e.EquipmentType)
             .Include(e => e.Studio)
+            .Include(e => e.UsersForbiddenToBorrow)
             .ToListAsync();
     }
 
@@ -36,6 +37,7 @@ public class EquipmentRepository(ApplicationDbContext context)
             .Include(e => e.EquipmentType)
             .Include(e => e.Studio)
             .Where(e => e.StudioId == studioId)
+            .Include(e => e.UsersForbiddenToBorrow)
             .ToListAsync();
     }
     public Task<int> CreateAsync(Equipment equipment)
