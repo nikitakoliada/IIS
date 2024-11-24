@@ -42,7 +42,7 @@
                 @Html.DisplayFor(modelItem => item.AssignedStudio.Name)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.BirthDate)
+                @item.BirthDate.ToShortDateString()
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Address)
