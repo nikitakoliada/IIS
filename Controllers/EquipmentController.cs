@@ -36,6 +36,7 @@ namespace IIS.Controllers
                     return View(new List<Equipment>());
                 }
             }
+
             return View(await equipmentRepository.GetAllWithIncludesAsync());
         }
 
@@ -66,6 +67,7 @@ namespace IIS.Controllers
             {
                 return Forbid();
             }
+
             return View();
         }
 
@@ -80,6 +82,7 @@ namespace IIS.Controllers
                 ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name");
                 return View(model);
             }
+
             Console.WriteLine(model.RentalDayIntervals.Count);
             foreach (var interval in model.RentalDayIntervals)
             {
@@ -131,11 +134,14 @@ namespace IIS.Controllers
             {
                 return NotFound();
             }
+
             var currentUser = await studioRepository.GetUserWithStudioAsync(User.Identity.Name);
-            if (!((currentUser?.AssignedStudioId == equipment.StudioId && User.IsInRole("Teacher")) || User.IsInRole("Admin")))
+            if (!((currentUser?.AssignedStudioId == equipment.StudioId && User.IsInRole("Teacher")) ||
+                  User.IsInRole("Admin")))
             {
                 return Forbid();
             }
+
             // Prepare the view model
             var model = new EquipmentViewModel
             {
@@ -157,13 +163,18 @@ namespace IIS.Controllers
                 UsersForbiddenToBorrow = equipment.UsersForbiddenToBorrow.Select(user => new UserViewModel
                 {
                     Id = user.Id,
-                    Name = user.Name
+                    Name = user.Email
                 }).ToList()
             };
 
-            ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name", equipment.EquipmentTypeId);
-            ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name", equipment.StudioId);
+            ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name",
+                equipment.EquipmentTypeId);
+            ViewData["StudioId"] =
+                new SelectList(await studioRepository.GetAllAsync(), "Id", "Name", equipment.StudioId);
             ViewData["UserId"] = new SelectList(await userRepository.GetAllAsync(), "Id", "Name");
+            ViewData["StudioUsers"] =
+                (await userRepository.GetAllFromStudioWithIncludesFromStudioAsync(equipment.StudioId)).Select(x =>
+                    new UserViewModel() { Id = x.Id, Name = x.Email });
 
             return View(model);
         }
@@ -180,9 +191,14 @@ namespace IIS.Controllers
 
             if (!ModelState.IsValid)
             {
-                ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name", model.EquipmentTypeId);
-                ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name", model.StudioId);
+                ViewData["EquipmentTypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name",
+                    model.EquipmentTypeId);
+                ViewData["StudioId"] =
+                    new SelectList(await studioRepository.GetAllAsync(), "Id", "Name", model.StudioId);
                 ViewData["UserId"] = new SelectList(await userRepository.GetAllAsync(), "Id", "Name");
+                ViewData["StudioUsers"] =
+                    (await userRepository.GetAllFromStudioWithIncludesFromStudioAsync(model.StudioId)).Select(x =>
+                        new UserViewModel() { Id = x.Id, Name = x.Email });
 
                 return View(model);
             }
@@ -195,7 +211,8 @@ namespace IIS.Controllers
                 equipment.ManufactureYear = model.ManufactureYear;
                 equipment.PurchaseDate = model.PurchaseDate;
                 equipment.Image = model.Image;
-                equipment.MaxRentalTime = model.MaxRentalDays == null ? null : TimeSpan.FromDays(model.MaxRentalDays.Value);
+                equipment.MaxRentalTime =
+                    model.MaxRentalDays == null ? null : TimeSpan.FromDays(model.MaxRentalDays.Value);
                 equipment.StudioId = model.StudioId;
                 equipment.EquipmentTypeId = model.EquipmentTypeId;
 
@@ -226,19 +243,25 @@ namespace IIS.Controllers
                 var existingForbiddenUsers = equipment.UsersForbiddenToBorrow.ToList();
                 equipment.UsersForbiddenToBorrow.Clear();
 
-                if (model.UsersForbiddenToBorrow != null) 
+                if (model.UsersForbiddenToBorrow != null)
                 {
-                    foreach (var forbiddenUser in model.UsersForbiddenToBorrow)
+                    foreach (var forbiddenUser in model.UsersForbiddenToBorrow.GroupBy(x => x.Id).Select(x => x.First()))
                     {
                         var foundForbiddenUser = await userRepository.GetByIdAsync(forbiddenUser.Id);
                         if (foundForbiddenUser == null)
                         {
-                            ViewData["TypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id", "Name", model.EquipmentTypeId);
-                            ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name", model.StudioId);
+                            ViewData["TypeId"] = new SelectList(await equipmentTypeRepository.GetAllAsync(), "Id",
+                                "Name", model.EquipmentTypeId);
+                            ViewData["StudioId"] = new SelectList(await studioRepository.GetAllAsync(), "Id", "Name",
+                                model.StudioId);
                             ViewData["UserId"] = new SelectList(await userRepository.GetAllAsync(), "Id", "Name");
+                            ViewData["StudioUsers"] =
+                                (await userRepository.GetAllFromStudioWithIncludesFromStudioAsync(equipment.StudioId)).Select(x =>
+                                    new UserViewModel() { Id = x.Id, Name = x.Email });
 
                             return View(model);
                         }
+
                         equipment.UsersForbiddenToBorrow.Add(foundForbiddenUser);
                     }
                 }
@@ -272,11 +295,14 @@ namespace IIS.Controllers
             {
                 return NotFound();
             }
+
             var currentUser = await studioRepository.GetUserWithStudioAsync(User.Identity.Name);
-            if (!((currentUser?.AssignedStudioId == equipment.StudioId && User.IsInRole("Teacher")) || User.IsInRole("Admin")))
+            if (!((currentUser?.AssignedStudioId == equipment.StudioId && User.IsInRole("Teacher")) ||
+                  User.IsInRole("Admin")))
             {
                 return Forbid();
             }
+
             return View(equipment);
         }
 
