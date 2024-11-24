@@ -43,7 +43,7 @@
                     <span asp-validation-for="AssignedStudioId" class="text-danger"></span>
                 </div>
             }
-            else if (ViewData["IsAssignedToMyStudio"] != null && (bool)ViewData["IsAssignedToMyStudio"])
+            else if (ViewData["IsAssignedToMyStudio"] != null)
             {
                 <div class="form-group">
                     <label for="IsAssignedToMyStudio" class="form-check-label">Is Assigned To My Studio</label>
