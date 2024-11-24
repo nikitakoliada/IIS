@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>aspnet-IIS-031A63D0-D6A6-47B0-9C75-F087CC7B6762</UserSecretsId>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <SelfContained>True</SelfContained>
     </PropertyGroup>
 
     <ItemGroup>
@@ -40,6 +41,10 @@
       <AdditionalFiles Include="Views\Borrow\Delete.cshtml" />
       <AdditionalFiles Include="Views\Borrow\Details.cshtml" />
       <AdditionalFiles Include="Views\Borrow\Index.cshtml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Data\Migrations\ApplicationDbContextModelSnapshot.cs" />
     </ItemGroup>
 
 </Project>
