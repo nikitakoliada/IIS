@@ -46,7 +46,7 @@ public static class SeedData
         var teachers = new Dictionary<int, User>();
         foreach (var studio in studios)
         {
-            var roles = new[] { "Admin", "StudioAdmin", "Teacher", null };
+            var roles = new[] { "Admin", "StudioAdmin", "Teacher", "Student" };
             foreach (var role in roles)
             {
                 var user = new User
