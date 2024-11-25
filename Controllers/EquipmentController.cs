@@ -22,7 +22,7 @@ namespace IIS.Controllers
         : Controller
     {
         // GET: Equipment
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
             var currentUser = await userRepository.GetUserWithStudioAsync(User.Identity.Name);
             List<Equipment> equipments = new List<Equipment>();
@@ -39,7 +39,11 @@ namespace IIS.Controllers
             {
                 equipments = await equipmentRepository.GetAllWithIncludesAsync();
             }
-
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                equipments = [..equipments.Where(e => 
+                    e.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))];
+            }
             return View(equipments.Select(x => ListEquipmentViewModel.FromEquipmentModel(x, currentUser.Id, User))
                 .ToList());
         }
