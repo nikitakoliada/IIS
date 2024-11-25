@@ -72,6 +72,10 @@ public static class SeedData
 
         // Equipments and Rental Day Intervals
         var equipments = new List<Equipment>();
+        string[] images = ["https://id-media.apjonlinecdn.com/magefan_blog/Laptop.jpg", 
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Logicool_StreamCam_%28cropped%29.jpg/1200px-Logicool_StreamCam_%28cropped%29.jpg",
+            "https://cdn11.bigcommerce.com/s-i96uyzqbhj/images/stencil/1280x1280/products/27679/34000/atec_at897__48377.1705710534.jpg?c=1"
+        ];
         foreach (var studio in studios)
         {
             foreach (var equipmentType in equipmentTypes)
@@ -86,6 +90,7 @@ public static class SeedData
                         StudioId = studio.Id,
                         EquipmentTypeId = equipmentType.Id,
                         OwnerId = teachers[studio.Id].Id,
+                        Image = images[i],
                     };
                     equipments.Add(equipment);
                 }
