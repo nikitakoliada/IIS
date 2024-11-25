@@ -1,0 +1,205 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+
+<head lang="en">
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Project IIS</title>
+	<style type="text/css">
+		table {
+			border-collapse: collapse;
+		}
+
+		td,
+		th {
+			border: 1px solid black;
+			padding: 0.3em 0.5em;
+			text-align: left;
+		}
+
+		dt {
+			font-weight: bold;
+			margin-top: 0.5em;
+		}
+
+		#erd {
+		    background-color: black;
+		}
+	</style>
+</head>
+
+<body>
+	<h1>Artists School</h1>
+
+	<dl>
+		<dt>Authors</dt>
+		<dd>Pavlo Butenko
+			<a href="mailto:xbuten00@stud.fit.vutbr.cz">xbuten00@stud.fit.vutbr.cz</a> -
+			borrow system implementation, borrow CRUD, image upload
+		</dd>
+		<dd>Mykola Vorontsov
+			<a href="mailto:xvoron03@stud.fit.vutbr.cz">xvoron03@stud.fit.vutbr.cz</a> -
+			studio and equipment type and users CRUD, roles administration, data seeder
+		</dd>
+		<dd>Nikita Koliada
+			<a href="mailto:xkolia00@stud.fit.vutbr.cz">xkolia00@stud.fit.vutbr.cz</a> -
+			equipment and rental day intervals CRUD, authentication
+		</dd>
+		<dt>Application URL</dt>
+		<dd>
+		    <a href="https://equipment-manager-dtg0bkgfetandde2.polandcentral-01.azurewebsites.net/">https://equipment-manager-dtg0bkgfetandde2.polandcentral-01.azurewebsites.net/</a>
+		</dd>
+	</dl>
+
+	<h2>Users for testing</h2>
+	<table>
+		<tr>
+			<th>Login</th>
+			<th>Password</th>
+			<th>Role</th>
+		</tr>
+		<tr>
+			<td>admin_alpha@example.com</td>
+			<td>qwerty678</td>
+			<td>Administrator</td>
+		</tr>
+		<tr>
+			<td>studioadmin_alpha@example.com</td>
+			<td>qwerty678</td>
+			<td>Studio Administrator</td>
+		</tr>
+		<tr>
+			<td>teacher_alpha@example.com</td>
+			<td>qwerty678</td>
+			<td>Teacher</td>
+		</tr>
+		<tr>
+			<td>student_alpha@example.com</td>
+			<td>qwerty678</td>
+			<td>Student</td>
+		</tr>
+	</table>
+
+	<h3>Video</h3>
+
+	<p><a href="https://youtu.be/yBLORJpYQSg">https://youtu.be/yBLORJpYQSg</a></p>
+
+	<h2>Implementation</h2>
+
+	<h3>Technologies overview</h3>
+
+	<p>
+		The project was implemented using C# and ASP.NET MVC framework using Server-Side Rendering and templates. Entity
+		Framework was used as an ORM framework, because it is de-facto standard for ASP.NET.
+		Routing is automatically resolved, because of ASP.NET conventional naming of controllers.
+	</p>
+
+	<h3>Project parts overview</h3>
+
+	<h4>Models</h4>
+
+	<p>
+	    <ul>
+			<li><b>Studio</b> - model for studio (ateliér), that can be created only by admin.</li>
+			<li><b>Equipment Type</b> - model for different equipment types, that are created by either admins or studio admins.</li>
+			<li><b>Equipment</b> - model for equipment, that can be borrowed by users and created by teachers.</li>
+			<li><b>User</b> - model for user, which also includes id of assigned studio, borrowed equipment
+			and equipment that is restricted for one's borrowing.
+			The model inherits ASP.NET model IdentityUser, for correct work of native ASP.NET authentication system.</li>
+			<li><b>Rental Day Interval</b> - model for intervals of the day of the week, when the equipment can be rented.
+			For example: we can say that selected equipment can be rented in Monday from 7:00 to 9:00 and from 13:00 to 15:00;
+			or in Thursday from 12:00 to 14:30.</li>
+			<li><b>Borrow</b> - model for one's borrow, that is basically many-to-many relationship between User and Equipment.
+			It also has a state, which signalize the current state of borrowing.</li>
+		</ul>
+	</p>
+
+	<h4>Repositories</h4>
+
+	<p>
+	    Repositories are middleware classes, that are used to retrieve data from database based on frequent use cases such as get all
+		records or get one concrete record. There are repositories for every model in the project.
+	</p>
+
+	<h4>Services</h4>
+
+	<p>
+	    Services used to solve and extract business logic from views. There is only Borrow Service, because only its implementation has
+		difficult logic.
+	</p>
+
+	<h4>ViewModels</h4>
+
+	<p>
+	    ViewModels are request form templates for POST actions in controllers. After submitting POST request, controller extract
+		properties for creating/editing models.
+	</p>
+
+	<h4>Controllers</h4>
+
+	<p>
+	    There are controllers for every model in the project. They implement CRUD actions. Using dependency injection, they acquire
+		needed repositories and services. Also, it filters requests based on one's roles.
+	</p>
+
+	<h4>Views</h4>
+
+	<p>
+	    There are views realisating CRUD actions for every model in the project. <br />
+		View types:
+		<ul>
+		    <li>Index - view to list all items</li>
+			<li>Create - view to create new record</li>
+			<li>Details - view to see detailed specification of model</li>
+			<li>Edit - view to edit existing record</li>
+			<li>Delete - view to delete record</li>
+		</ul>
+	</p>
+
+	<h3>Database</h3>
+
+	<p><img id="erd" src="ERD.png"></p>
+
+	<h4>Database Technologies</h4>
+
+	<p>
+	    For development, we were using SQLite database. For production, we are using Azure's SQL Server.
+	</p>
+
+	<h2>Installation</h2>
+
+	<h3>Software Requirements</h3>
+
+	<ul>
+	    <li>.NET 8.0</li>
+		<li>EF Core CLI (dotnet tool install dotnet-ef)</li>
+
+		<li>Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore 8.0.4</li>
+		<li>Microsoft.AspNetCore.Identity.EntityFrameworkCore 8.0.4</li>
+		<li>Microsoft.AspNetCore.Identity.UI 8.0.4</li>
+		<li>Microsoft.EntityFrameworkCore.Sqlite 8.0.4</li>
+		<li>MySql.EntityFrameworkCore 8.0.5</li>
+		<li>Microsoft.EntityFrameworkCore.SqlServer 8.0.10</li>
+		<li>Microsoft.EntityFrameworkCore.Tools 8.0.4</li>
+		<li>Microsoft.EntityFrameworkCore.Design 8.0.10</li>
+	</ul>
+
+	<h3>Local Deployment</h3>
+
+	<p>
+	    Commands to launch:
+	    <ul>
+			<li>To setup dev environment: export IsLocalEnvironment=true</li>
+			<li>dotnet restore</li>
+			<li>dotnet build</li>
+			<li>dotnet ef database update</li>
+			<li>dotnet run</li>
+		</ul>
+	</p>
+
+	<h2>Known Issues</h2>
+
+	<p>None.</p>
+
+</body>
+
+</html>
