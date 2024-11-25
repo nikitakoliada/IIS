@@ -166,10 +166,12 @@ namespace IIS.Controllers
                 if (user.IsAssignedToMyStudio.HasValue && user.IsAssignedToMyStudio.Value)
                 {
                     user.AssignedStudioId = currentUser.AssignedStudioId;
+                    await userManager.AddToRoleAsync(foundUser, "Student");
                 }
                 else
                 {
                     user.AssignedStudioId = 0;
+                    await userManager.RemoveFromRoleAsync(foundUser, "Student");
                 }
             }
 
@@ -285,6 +287,7 @@ namespace IIS.Controllers
             else if (viewModel.AssignedStudioId != null && await studioRepository.GetByIdAsync(viewModel.AssignedStudioId.Value) != null)
             {
                 user.AssignedStudioId = viewModel.AssignedStudioId;
+                await userManager.AddToRoleAsync(user, "Student");
             }
 
             await userRepository.UpdateAsync(user);
